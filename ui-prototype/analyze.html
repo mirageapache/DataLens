@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataLens - 分析設定</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Roboto & Noto Sans TC -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            matPrimary: '#3f51b5',
+            matPrimaryHover: '#303f9f',
+            matBg: '#f5f5f5',
+            matSurface: '#ffffff',
+            matBorder: '#e0e0e0',
+            matTextPrimary: 'rgba(0, 0, 0, 0.87)',
+            matTextSecondary: 'rgba(0, 0, 0, 0.60)',
+          },
+          fontFamily: {
+            sans: ['Roboto', 'Noto Sans TC', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .mat-elevation-1 {
+      box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12);
+    }
+    .mat-elevation-2 {
+      box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
+    }
+    .mat-card-selected {
+      border-color: #3f51b5 !important;
+      background-color: #f5f5ff !important;
+    }
+  </style>
+</head>
+<body class="bg-matBg font-sans text-matTextPrimary antialiased min-h-screen flex flex-col">
+
+  <!-- ================= App Shell: Toolbar ================= -->
+  <header class="bg-matPrimary text-white h-16 flex items-center justify-between px-4 mat-elevation-2 z-10 sticky top-0">
+    <div class="flex items-center space-x-4">
+      <button class="text-white hover:bg-white/10 w-10 h-10 rounded-full flex items-center justify-center transition">
+        <i class="fa-solid fa-bars text-lg"></i>
+      </button>
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-chart-pie text-xl text-indigo-200"></i>
+        <span class="text-xl font-medium tracking-wide">DataLens</span>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-3">
+      <button class="text-white hover:bg-white/10 w-10 h-10 rounded-full flex items-center justify-center transition">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= App Shell: Main Container ================= -->
+  <div class="flex flex-1 overflow-hidden">
+    
+    <!-- Left SideNav -->
+    <aside class="w-60 bg-matSurface border-r border-matBorder flex flex-col justify-between py-2 shrink-0">
+      <nav class="space-y-1 px-2">
+        <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-50 text-matPrimary font-medium text-sm">
+          <i class="fa-solid fa-folder-closed text-base"></i>
+          <span>資料集</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-matTextSecondary hover:bg-gray-100 font-medium text-sm transition">
+          <i class="fa-solid fa-chart-column text-base"></i>
+          <span>分析歷史</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-6">
+      <div class="max-w-4xl mx-auto space-y-6">
+        
+        <!-- Breadcrumb / Back Button -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <a href="#" class="text-gray-500 hover:text-matPrimary flex items-center space-x-1 text-sm transition">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>返回資料集詳情</span>
+            </a>
+            <span class="text-gray-300">/</span>
+            <span class="text-sm font-semibold text-gray-800">建立分析任務</span>
+          </div>
+          
+          <!-- Prototype Context Switcher -->
+          <button onclick="toggleDatasetContext()" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1.5 rounded text-gray-700 transition">
+            <i class="fa-solid fa-arrows-rotate mr-1"></i> 切換模擬資料集 (含日期 / 無日期)
+          </button>
+        </div>
+
+        <!-- Target Dataset Banner -->
+        <div class="bg-indigo-900 text-white p-4 rounded-xl shadow-sm flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center text-indigo-200 text-xl">
+              <i class="fa-solid fa-table"></i>
+            </div>
+            <div>
+              <p class="text-xs text-indigo-200">當前分析目標資料集</p>
+              <h2 id="datasetTitle" class="text-base font-bold">2026_Q2_Sales_Report.xlsx</h2>
+            </div>
+          </div>
+          <div class="text-right text-xs text-indigo-200 space-x-3">
+            <span><i class="fa-solid fa-list-ol mr-1"></i> 12,450 列</span>
+            <span><i class="fa-solid fa-columns mr-1"></i> 8 欄位</span>
+          </div>
+        </div>
+
+        <!-- Main Form Card (mat-card) -->
+        <div class="bg-matSurface rounded-xl border border-matBorder mat-elevation-1 p-6 space-y-8">
+          
+          <!-- Step 1: Select Analysis Type -->
+          <div>
+            <div class="flex items-center space-x-2 mb-4">
+              <span class="w-6 h-6 rounded-full bg-matPrimary text-white text-xs font-bold flex items-center justify-center">1</span>
+              <h3 class="text-base font-bold text-gray-800">選擇分析類型</h3>
+            </div>
+
+            <!-- Grid Cards for Analysis Types -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              <!-- Type A: Descriptive Statistics -->
+              <div id="card-DESCRIPTIVE" onclick="selectAnalysisType('DESCRIPTIVE')" class="mat-card-selected border-2 border-matBorder rounded-xl p-4 cursor-pointer hover:border-indigo-300 transition relative">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-lg bg-indigo-100 text-matPrimary flex items-center justify-center">
+                      <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-sm text-gray-800">描述性統計</h4>
+                      <p class="text-xs text-matTextSecondary mt-0.5">平均值、中位數、四分位數、偏態與峰度</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Type B: Correlation -->
+              <div id="card-CORRELATION" onclick="selectAnalysisType('CORRELATION')" class="border-2 border-matBorder rounded-xl p-4 cursor-pointer hover:border-indigo-300 transition relative">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center">
+                      <i class="fa-solid fa-border-all"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-sm text-gray-800">相關性分析</h4>
+                      <p class="text-xs text-matTextSecondary mt-0.5">Pearson / Spearman 相關矩陣與熱力圖</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Type C: Group Aggregation -->
+              <div id="card-GROUP_BY" onclick="selectAnalysisType('GROUP_BY')" class="border-2 border-matBorder rounded-xl p-4 cursor-pointer hover:border-indigo-300 transition relative">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                      <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-sm text-gray-800">分組聚合</h4>
+                      <p class="text-xs text-matTextSecondary mt-0.5">GROUP BY 類別欄位並計算 SUM/AVG/COUNT</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Type D: Time Series (Conditionally Disabled Example) -->
+              <div id="card-TIME_SERIES" onclick="selectAnalysisType('TIME_SERIES')" class="border-2 border-matBorder rounded-xl p-4 cursor-pointer hover:border-indigo-300 transition relative">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                      <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-sm text-gray-800">時序趨勢分析</h4>
+                      <p class="text-xs text-matTextSecondary mt-0.5">時間軸趨勢折線圖與週期變化</p>
+                    </div>
+                  </div>
+                </div>
+                <!-- Disabled Overlay (Will show when no date column exists) -->
+                <div id="timeSeriesDisabledOverlay" class="hidden absolute inset-0 bg-white/80 backdrop-blur-[1px] rounded-xl flex items-center justify-between px-4 z-10">
+                  <span class="text-xs font-semibold text-gray-500"><i class="fa-solid fa-circle-exclamation text-amber-500 mr-1"></i> 資料集缺少日期/時間型別欄位</span>
+                  <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded font-bold">不可用</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <hr class="border-matBorder">
+
+          <!-- Step 2: Dynamic Form Parameters -->
+          <div>
+            <div class="flex items-center space-x-2 mb-4">
+              <span class="w-6 h-6 rounded-full bg-matPrimary text-white text-xs font-bold flex items-center justify-center">2</span>
+              <h3 class="text-base font-bold text-gray-800">設定分析參數</h3>
+            </div>
+
+            <!-- Form Container (Swaps dynamically) -->
+            <div id="dynamicFormArea" class="bg-gray-50/70 rounded-xl border border-matBorder p-5">
+              
+              <!-- Form A: Descriptive Statistics -->
+              <div id="form-DESCRIPTIVE" class="space-y-4">
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">選擇參與統計的數值欄位 (NUMERIC Only)</label>
+                <div class="flex items-center space-x-2 mb-2">
+                  <button type="button" onclick="selectAllColumns('descriptive-cols', true)" class="text-xs text-matPrimary font-medium hover:underline">全選</button>
+                  <span class="text-gray-300">|</span>
+                  <button type="button" onclick="selectAllColumns('descriptive-cols', false)" class="text-xs text-gray-500 hover:underline">取消全選</button>
+                </div>
+                <div id="descriptive-cols-container" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+
+              <!-- Form B: Correlation (Hidden) -->
+              <div id="form-CORRELATION" class="hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">相關係數演算法</label>
+                    <select id="corrMethod" class="w-full bg-white border border-matBorder rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-matPrimary">
+                      <option value="pearson">Pearson (線性相關，標準預設)</option>
+                      <option value="spearman">Spearman (單調等級相關)</option>
+                    </select>
+                  </div>
+                </div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mt-4">選擇分析欄位 (最少選取 2 個欄位)</label>
+                <div id="correlation-cols-container" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+
+              <!-- Form C: Group Aggregation (Hidden) -->
+              <div id="form-GROUP_BY" class="hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">分組目標欄位 (Group By)</label>
+                    <select id="groupByCol" class="w-full bg-white border border-matBorder rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-matPrimary">
+                      <!-- Dynamically populated (Categorical & Numeric) -->
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">聚合數值欄位</label>
+                    <select id="aggregateCol" class="w-full bg-white border border-matBorder rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-matPrimary">
+                      <!-- Dynamically populated (Numeric only) -->
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">聚合計算函數</label>
+                    <select id="aggFunc" class="w-full bg-white border border-matBorder rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-matPrimary">
+                      <option value="SUM">SUM (總和)</option>
+                      <option value="AVG">AVG (平均數)</option>
+                      <option value="COUNT">COUNT (計數)</option>
+                      <option value="MAX">MAX (最大值)</option>
+                      <option value="MIN">MIN (最小值)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Form D: Time Series (Hidden) -->
+              <div id="form-TIME_SERIES" class="hidden space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">時間軸欄位 (DATE/DATETIME Only)</label>
+                    <select id="timeCol" class="w-full bg-white border border-matBorder rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-matPrimary">
+                      <!-- Dynamically filtered -->
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">觀察值欄位 (NUMERIC Only)</label>
+                    <select id="valueCol" class="w-full bg-white border border-matBorder rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-matPrimary">
+                      <!-- Dynamically filtered -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Submit CTA -->
+          <div class="flex items-center justify-between pt-4 border-t border-matBorder">
+            <span id="selectedSummary" class="text-xs text-gray-500">已選擇：描述性統計分析</span>
+            <button onclick="submitAnalysis()" class="bg-matPrimary hover:bg-matPrimaryHover text-white font-medium px-6 py-2.5 rounded-lg mat-elevation-1 flex items-center space-x-2 transition">
+              <i class="fa-solid fa-play text-xs"></i>
+              <span>觸發分析任務</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 模擬後端回傳的兩套 Dataset Columns Metadata
+    const datasetWithDate = {
+      title: "2026_Q2_Sales_Report.xlsx",
+      columns: [
+        { column_name: "order_date", data_type: "DATE" },
+        { column_name: "region", data_type: "CATEGORY" },
+        { column_name: "product_category", data_type: "CATEGORY" },
+        { column_name: "sales_amount", data_type: "NUMERIC" },
+        { column_name: "discount_rate", data_type: "NUMERIC" },
+        { column_name: "profit", data_type: "NUMERIC" },
+        { column_name: "quantity", data_type: "NUMERIC" }
+      ]
+    };
+
+    const datasetWithoutDate = {
+      title: "user_survey_response.csv",
+      columns: [
+        { column_name: "user_id", data_type: "NUMERIC" },
+        { column_name: "satisfaction_score", data_type: "NUMERIC" },
+        { column_name: "age", data_type: "NUMERIC" },
+        { column_name: "gender", data_type: "CATEGORY" },
+        { column_name: "feedback_type", data_type: "CATEGORY" }
+      ]
+    };
+
+    let currentDataset = datasetWithDate;
+    let currentType = 'DESCRIPTIVE';
+
+    function initForm() {
+      document.getElementById('datasetTitle').innerText = currentDataset.title;
+      
+      const hasDate = currentDataset.columns.some(c => c.data_type === 'DATE' || c.data_type === 'DATETIME');
+      const timeSeriesOverlay = document.getElementById('timeSeriesDisabledOverlay');
+      
+      if (!hasDate) {
+        timeSeriesOverlay.classList.remove('hidden');
+        if (currentType === 'TIME_SERIES') {
+          selectAnalysisType('DESCRIPTIVE');
+        }
+      } else {
+        timeSeriesOverlay.classList.add('hidden');
+      }
+
+      populateDynamicFields();
+    }
+
+    function populateDynamicFields() {
+      const numericCols = currentDataset.columns.filter(c => c.data_type === 'NUMERIC');
+      const dateCols = currentDataset.columns.filter(c => c.data_type === 'DATE' || c.data_type === 'DATETIME');
+      const allCols = currentDataset.columns;
+
+      // 1. Populate Descriptive Checkboxes
+      const descContainer = document.getElementById('descriptive-cols-container');
+      descContainer.innerHTML = numericCols.map(c => `
+        <label class="flex items-center space-x-2 text-sm bg-white p-2.5 rounded-lg border border-matBorder hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" value="${c.column_name}" checked class="descriptive-cols rounded text-matPrimary focus:ring-matPrimary">
+          <span class="font-medium text-gray-700">${c.column_name}</span>
+          <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono ml-auto">NUMERIC</span>
+        </label>
+      `).join('');
+
+      // 2. Populate Correlation Checkboxes
+      const corrContainer = document.getElementById('correlation-cols-container');
+      corrContainer.innerHTML = numericCols.map(c => `
+        <label class="flex items-center space-x-2 text-sm bg-white p-2.5 rounded-lg border border-matBorder hover:bg-gray-100 cursor-pointer">
+          <input type="checkbox" value="${c.column_name}" checked class="correlation-cols rounded text-matPrimary focus:ring-matPrimary">
+          <span class="font-medium text-gray-700">${c.column_name}</span>
+        </label>
+      `).join('');
+
+      // 3. Populate Group By Selects
+      document.getElementById('groupByCol').innerHTML = allCols.map(c => `
+        <option value="${c.column_name}">${c.column_name} (${c.data_type})</option>
+      `).join('');
+
+      document.getElementById('aggregateCol').innerHTML = numericCols.map(c => `
+        <option value="${c.column_name}">${c.column_name}</option>
+      `).join('');
+
+      // 4. Populate Time Series Selects
+      document.getElementById('timeCol').innerHTML = dateCols.map(c => `
+        <option value="${c.column_name}">${c.column_name}</option>
+      `).join('');
+
+      document.getElementById('valueCol').innerHTML = numericCols.map(c => `
+        <option value="${c.column_name}">${c.column_name}</option>
+      `).join('');
+    }
+
+    function selectAnalysisType(type) {
+      if (type === 'TIME_SERIES' && !currentDataset.columns.some(c => c.data_type === 'DATE' || c.data_type === 'DATETIME')) {
+        return; // Disabled
+      }
+
+      currentType = type;
+      ['DESCRIPTIVE', 'CORRELATION', 'GROUP_BY', 'TIME_SERIES'].forEach(t => {
+        const card = document.getElementById(`card-${t}`);
+        const form = document.getElementById(`form-${t}`);
+        if (t === type) {
+          card.classList.add('mat-card-selected');
+          form.classList.remove('hidden');
+        } else {
+          card.classList.remove('mat-card-selected');
+          form.classList.add('hidden');
+        }
+      });
+
+      const labelMap = {
+        'DESCRIPTIVE': '已選擇：描述性統計分析',
+        'CORRELATION': '已選擇：相關性矩陣分析',
+        'GROUP_BY': '已選擇：分組聚合分析 (Group By)',
+        'TIME_SERIES': '已選擇：時序趨勢分析'
+      };
+      document.getElementById('selectedSummary').innerText = labelMap[type];
+    }
+
+    function selectAllColumns(className, selectAll) {
+      document.querySelectorAll(`.${className}`).forEach(cb => cb.checked = selectAll);
+    }
+
+    function toggleDatasetContext() {
+      currentDataset = (currentDataset === datasetWithDate) ? datasetWithoutDate : datasetWithDate;
+      initForm();
+    }
+
+    function submitAnalysis() {
+      alert(`已送出分析請求！\n分析類型: ${currentType}\n取得 task_id: task_20260731_xyz\n將自動導向至 /analysis/tasks/task_20260731_xyz 檢視進度/結果`);
+    }
+
+    // Initialize
+    initForm();
+  </script>
+</body>
+</html>

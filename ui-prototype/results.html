@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataLens - 分析結果 Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Apache ECharts CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <!-- Google Fonts: Roboto & Noto Sans TC -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            matPrimary: '#3f51b5',
+            matPrimaryHover: '#303f9f',
+            matBg: '#f5f5f5',
+            matSurface: '#ffffff',
+            matBorder: '#e0e0e0',
+            matTextPrimary: 'rgba(0, 0, 0, 0.87)',
+            matTextSecondary: 'rgba(0, 0, 0, 0.60)',
+          },
+          fontFamily: {
+            sans: ['Roboto', 'Noto Sans TC', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .mat-elevation-1 {
+      box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12);
+    }
+    .mat-elevation-2 {
+      box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
+    }
+    .tab-active {
+      border-bottom: 3px solid #3f51b5;
+      color: #3f51b5;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="bg-matBg font-sans text-matTextPrimary antialiased min-h-screen flex flex-col">
+
+  <!-- ================= App Shell: Toolbar ================= -->
+  <header class="bg-matPrimary text-white h-16 flex items-center justify-between px-4 mat-elevation-2 z-10 sticky top-0">
+    <div class="flex items-center space-x-4">
+      <button class="text-white hover:bg-white/10 w-10 h-10 rounded-full flex items-center justify-center transition">
+        <i class="fa-solid fa-bars text-lg"></i>
+      </button>
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-chart-pie text-xl text-indigo-200"></i>
+        <span class="text-xl font-medium tracking-wide">DataLens</span>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-3">
+      <button class="text-white hover:bg-white/10 w-10 h-10 rounded-full flex items-center justify-center transition">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= Main Area ================= -->
+  <div class="flex flex-1 overflow-hidden">
+    
+    <!-- Left SideNav -->
+    <aside class="w-60 bg-matSurface border-r border-matBorder flex flex-col justify-between py-2 shrink-0">
+      <nav class="space-y-1 px-2">
+        <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-matTextSecondary hover:bg-gray-100 font-medium text-sm transition">
+          <i class="fa-solid fa-folder-closed text-base"></i>
+          <span>資料集</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-50 text-matPrimary font-medium text-sm">
+          <i class="fa-solid fa-chart-column text-base"></i>
+          <span>分析歷史</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-6">
+      <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Top Bar with Prototype Switcher -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <a href="#" class="text-gray-500 hover:text-matPrimary flex items-center space-x-1 text-sm transition">
+              <i class="fa-solid fa-arrow-left"></i>
+              <span>返回分析歷史</span>
+            </a>
+            <span class="text-gray-300">/</span>
+            <span class="text-xs font-mono bg-gray-200 text-gray-700 px-2 py-0.5 rounded">Task ID: task_20260731_88a1</span>
+          </div>
+
+          <!-- Prototype State Toggle Button -->
+          <button onclick="toggleTaskStatus()" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1.5 rounded text-gray-700 transition flex items-center space-x-1">
+            <i class="fa-solid fa-rotate mr-1"></i>
+            <span>切換狀態：<strong id="statusToggleLabel" class="text-indigo-600">SUCCESS (完成)</strong></span>
+          </button>
+        </div>
+
+        <!-- ================= State A: Loading / Polling View ================= -->
+        <div id="loadingStateView" class="hidden bg-matSurface rounded-xl border border-matBorder mat-elevation-1 p-12 text-center space-y-6">
+          <div class="max-w-md mx-auto space-y-4">
+            <div class="w-16 h-16 bg-indigo-50 text-matPrimary rounded-full flex items-center justify-center mx-auto text-2xl animate-spin">
+              <i class="fa-solid fa-circle-notch"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-800">非同步分析任務處理中...</h3>
+              <p class="text-xs text-matTextSecondary mt-1">Celery 背景 Worker 正在為 <span class="font-semibold text-gray-700">2026_Q2_Sales_Report.xlsx</span> 計算統計矩陣</p>
+            </div>
+
+            <!-- Material Progress Bar -->
+            <div class="w-full bg-indigo-100 h-1.5 rounded-full overflow-hidden">
+              <div class="bg-matPrimary h-full animate-pulse w-2/3 rounded-full"></div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-gray-400 font-mono">
+              <span>Status: STARTED</span>
+              <span>Polling interval: 2s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= State B: Completed Result Dashboard View ================= -->
+        <div id="completedStateView" class="space-y-6">
+          
+          <!-- Task Overview Banner -->
+          <div class="bg-matSurface rounded-xl border border-matBorder mat-elevation-1 p-5 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-4">
+              <div class="w-12 h-12 bg-indigo-50 text-matPrimary rounded-xl flex items-center justify-center text-2xl shrink-0">
+                <i class="fa-solid fa-chart-line"></i>
+              </div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h1 class="text-lg font-bold text-gray-800">綜合分析結果 Dashboard</h1>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span> SUCCESS
+                  </span>
+                </div>
+                <p class="text-xs text-matTextSecondary mt-1">目標資料集：<span class="font-semibold text-gray-700">2026_Q2_Sales_Report.xlsx</span> (12,450 列) • 耗時：1.42s</p>
+              </div>
+            </div>
+
+            <!-- Global Action Bar (Export PDF/CSV) -->
+            <div class="flex items-center space-x-3">
+              <button onclick="alert('匯出 CSV 檔案中...')" class="border border-matBorder hover:bg-gray-50 text-gray-700 font-medium px-3.5 py-2 rounded-lg text-xs flex items-center space-x-2 transition">
+                <i class="fa-solid fa-file-csv text-green-600 text-sm"></i>
+                <span>匯出 CSV 數據</span>
+              </button>
+              <button onclick="alert('產生 PDF 分析報告中...')" class="bg-matPrimary hover:bg-matPrimaryHover text-white font-medium px-4 py-2 rounded-lg text-xs flex items-center space-x-2 mat-elevation-1 transition">
+                <i class="fa-solid fa-file-pdf text-sm"></i>
+                <span>匯出 PDF 報表</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Analysis Results Tabs (mat-tabs) -->
+          <div class="bg-matSurface rounded-xl border border-matBorder mat-elevation-1 overflow-hidden">
+            
+            <!-- Tab Headers -->
+            <div class="flex border-b border-matBorder bg-gray-50/50 px-4 text-sm font-medium text-gray-600">
+              <button onclick="switchTab('tab-descriptive')" id="btn-tab-descriptive" class="px-5 py-3.5 tab-active flex items-center space-x-2 transition">
+                <i class="fa-solid fa-calculator"></i>
+                <span>描述性統計與分佈</span>
+              </button>
+              <button onclick="switchTab('tab-correlation')" id="btn-tab-correlation" class="px-5 py-3.5 hover:text-matPrimary flex items-center space-x-2 transition">
+                <i class="fa-solid fa-border-all"></i>
+                <span>相關性熱力圖</span>
+              </button>
+              <button onclick="switchTab('tab-timeseries')" id="btn-tab-timeseries" class="px-5 py-3.5 hover:text-matPrimary flex items-center space-x-2 transition">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>時序趨勢分析</span>
+              </button>
+            </div>
+
+            <!-- Tab Content Area -->
+            <div class="p-6">
+              
+              <!-- Tab 1: Descriptive Statistics & Histogram -->
+              <div id="tab-descriptive" class="space-y-6">
+                
+                <!-- Table View -->
+                <div>
+                  <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center space-x-2">
+                    <i class="fa-solid fa-table-cells text-matPrimary"></i>
+                    <span>連續型欄位統計摘要表</span>
+                  </h3>
+                  <div class="overflow-x-auto border border-matBorder rounded-lg">
+                    <table class="w-full text-left text-xs">
+                      <thead class="bg-gray-50 border-b border-matBorder text-gray-500 uppercase font-semibold">
+                        <tr>
+                          <th class="px-4 py-3">欄位名稱 (Metric)</th>
+                          <th class="px-4 py-3">Mean (平均值)</th>
+                          <th class="px-4 py-3">Median (中位數)</th>
+                          <th class="px-4 py-3">Std (標準差)</th>
+                          <th class="px-4 py-3">Min</th>
+                          <th class="px-4 py-3">Max</th>
+                          <th class="px-4 py-3">Skewness (偏態)</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-matBorder">
+                        <tr class="hover:bg-gray-50">
+                          <td class="px-4 py-3 font-bold text-gray-800">sales_amount</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">1,248.50</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">1,100.00</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">452.10</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">150.00</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">3,800.00</td>
+                          <td class="px-4 py-3 font-mono text-indigo-600 font-semibold">+0.68</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                          <td class="px-4 py-3 font-bold text-gray-800">discount_rate</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">0.15</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">0.10</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">0.08</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">0.00</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">0.40</td>
+                          <td class="px-4 py-3 font-mono text-indigo-600 font-semibold">+0.21</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                          <td class="px-4 py-3 font-bold text-gray-800">profit</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">312.40</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">280.00</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">120.30</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">-50.00</td>
+                          <td class="px-4 py-3 font-mono text-gray-700">950.00</td>
+                          <td class="px-4 py-3 font-mono text-indigo-600 font-semibold">+0.45</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Histogram Chart Container -->
+                <div class="border border-matBorder rounded-xl p-4 bg-gray-50/50 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-gray-800">sales_amount 數值分佈直方圖 (Histogram)</h3>
+                    
+                    <!-- Chart Control Toolbar -->
+                    <div class="flex items-center space-x-2">
+                      <button onclick="toggleDataLabels(histogramChart)" class="text-xs bg-white border border-matBorder px-2.5 py-1 rounded hover:bg-gray-100 transition">
+                        <i class="fa-solid fa-tag text-gray-500 mr-1"></i> 切換標籤
+                      </button>
+                      <button onclick="downloadChart(histogramChart, 'sales_distribution')" class="text-xs bg-white border border-matBorder px-2.5 py-1 rounded hover:bg-gray-100 transition">
+                        <i class="fa-solid fa-download text-gray-500 mr-1"></i> 下載圖表
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- ECharts Canvas Container -->
+                  <div id="histogramChart" class="w-full h-72"></div>
+                </div>
+
+              </div>
+
+              <!-- Tab 2: Correlation Heatmap -->
+              <div id="tab-correlation" class="hidden space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="text-sm font-bold text-gray-800">Pearson 相關係數熱力圖 (Correlation Heatmap)</h3>
+                    <p class="text-xs text-matTextSecondary mt-0.5">數值越接近 1.0 代表正相關越強，接近 -1.0 代表負相關</p>
+                  </div>
+                  <button onclick="downloadChart(heatmapChart, 'correlation_heatmap')" class="text-xs bg-white border border-matBorder px-2.5 py-1 rounded hover:bg-gray-100 transition">
+                    <i class="fa-solid fa-download text-gray-500 mr-1"></i> 下載熱力圖
+                  </button>
+                </div>
+
+                <!-- ECharts Canvas Container with Scroll Wrapper -->
+                <div class="border border-matBorder rounded-xl p-4 bg-gray-50/50 overflow-x-auto">
+                  <div id="heatmapChart" class="w-full min-w-[500px] h-80"></div>
+                </div>
+              </div>
+
+              <!-- Tab 3: Time Series Chart -->
+              <div id="tab-timeseries" class="hidden space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="text-sm font-bold text-gray-800"> sales_amount 時序走勢圖 (Time Series Trend)</h3>
+                    <p class="text-xs text-matTextSecondary mt-0.5">時間軸欄位：<span class="font-semibold text-gray-700">order_date</span></p>
+                  </div>
+                  <button onclick="downloadChart(lineChart, 'time_series_trend')" class="text-xs bg-white border border-matBorder px-2.5 py-1 rounded hover:bg-gray-100 transition">
+                    <i class="fa-solid fa-download text-gray-500 mr-1"></i> 下載折線圖
+                  </button>
+                </div>
+
+                <!-- ECharts Canvas Container -->
+                <div class="border border-matBorder rounded-xl p-4 bg-gray-50/50">
+                  <div id="lineChart" class="w-full h-80"></div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let isCompletedState = true;
+    let histogramChart, heatmapChart, lineChart;
+    let showLabels = false;
+
+    function toggleTaskStatus() {
+      isCompletedState = !isCompletedState;
+      const loadingView = document.getElementById('loadingStateView');
+      const completedView = document.getElementById('completedStateView');
+      const label = document.getElementById('statusToggleLabel');
+
+      if (isCompletedState) {
+        loadingView.classList.add('hidden');
+        completedView.classList.remove('hidden');
+        label.innerText = 'SUCCESS (完成)';
+        label.className = 'text-green-600';
+        setTimeout(initCharts, 100);
+      } else {
+        loadingView.classList.remove('hidden');
+        completedView.classList.add('hidden');
+        label.innerText = 'STARTED (進行中/輪詢)';
+        label.className = 'text-amber-600';
+      }
+    }
+
+    function switchTab(tabId) {
+      ['tab-descriptive', 'tab-correlation', 'tab-timeseries'].forEach(id => {
+        const content = document.getElementById(id);
+        const btn = document.getElementById(`btn-${id}`);
+        if (id === tabId) {
+          content.classList.remove('hidden');
+          btn.classList.add('tab-active');
+        } else {
+          content.classList.add('hidden');
+          btn.classList.remove('tab-active');
+        }
+      });
+
+      // Resize charts after tab switch to ensure correct dimensions
+      setTimeout(() => {
+        if (histogramChart) histogramChart.resize();
+        if (heatmapChart) heatmapChart.resize();
+        if (lineChart) lineChart.resize();
+      }, 50);
+    }
+
+    function initCharts() {
+      // 1. Histogram Chart Initialization
+      const histElem = document.getElementById('histogramChart');
+      if (histElem && !histogramChart) {
+        histogramChart = echarts.init(histElem);
+        histogramChart.setOption({
+          color: ['#3f51b5'],
+          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+          grid: { top: '10%', bottom: '15%', left: '8%', right: '5%' },
+          xAxis: { type: 'category', data: ['100-500', '500-1000', '1000-1500', '1500-2000', '2000-2500', '2500-3000', '3000+'] },
+          yAxis: { type: 'value', name: '頻率 (Count)' },
+          series: [{
+            data: [120, 450, 890, 620, 310, 140, 50],
+            type: 'bar',
+            label: { show: false, position: 'top' }
+          }]
+        });
+      }
+
+      // 2. Correlation Heatmap Chart Initialization
+      const heatElem = document.getElementById('heatmapChart');
+      if (heatElem && !heatmapChart) {
+        heatmapChart = echarts.init(heatElem);
+        const schema = ['sales_amount', 'discount_rate', 'profit', 'quantity'];
+        const data = [
+          [0,0,1.0], [0,1,-0.25], [0,2,0.82], [0,3,0.65],
+          [1,0,-0.25], [1,1,1.0], [1,2,-0.42], [1,3,0.10],
+          [2,0,0.82], [2,1,-0.42], [2,2,1.0], [2,3,0.58],
+          [3,0,0.65], [3,1,0.10], [3,2,0.58], [3,3,1.0]
+        ];
+        heatmapChart.setOption({
+          tooltip: { position: 'top' },
+          grid: { top: '10%', bottom: '15%', left: '15%', right: '10%' },
+          xAxis: { type: 'category', data: schema, splitArea: { show: true } },
+          yAxis: { type: 'category', data: schema, splitArea: { show: true } },
+          visualMap: {
+            min: -1, max: 1, calculable: true, orient: 'horizontal', left: 'center', bottom: '0%',
+            inRange: { color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026'] }
+          },
+          series: [{
+            name: 'Correlation', type: 'heatmap', data: data,
+            label: { show: true },
+            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
+          }]
+        });
+      }
+
+      // 3. Time Series Line Chart Initialization
+      const lineElem = document.getElementById('lineChart');
+      if (lineElem && !lineChart) {
+        lineChart = echarts.init(lineElem);
+        lineChart.setOption({
+          color: ['#3f51b5'],
+          tooltip: { trigger: 'axis' },
+          grid: { top: '10%', bottom: '15%', left: '8%', right: '5%' },
+          xAxis: { type: 'category', data: ['2026-07-01', '2026-07-05', '2026-07-10', '2026-07-15', '2026-07-20', '2026-07-25', '2026-07-30'] },
+          yAxis: { type: 'value', name: 'Sales Amount' },
+          series: [{
+            data: [820, 932, 901, 1290, 1330, 1320, 1550],
+            type: 'line',
+            smooth: true,
+            areaStyle: { opacity: 0.1 }
+          }]
+        });
+      }
+    }
+
+    function toggleDataLabels(chartInstance) {
+      if (!chartInstance) return;
+      showLabels = !showLabels;
+      chartInstance.setOption({
+        series: [{ label: { show: showLabels } }]
+      });
+    }
+
+    function downloadChart(chartInstance, filename) {
+      if (!chartInstance) return;
+      const url = chartInstance.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#fff' });
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.png`;
+      a.click();
+    }
+
+    // Auto window resize handling
+    window.addEventListener('resize', () => {
+      if (histogramChart) histogramChart.resize();
+      if (heatmapChart) heatmapChart.resize();
+      if (lineChart) lineChart.resize();
+    });
+
+    // Initialize charts on load
+    window.onload = () => {
+      initCharts();
+    };
+  </script>
+</body>
+</html>
