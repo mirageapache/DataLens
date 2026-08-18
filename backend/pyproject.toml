@@ -1,10 +1,13 @@
 [project]
 name = "datalens-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "DataLens backend — 資料分析與系統監控整合平台的 FastAPI 服務"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.19.1",
     "fastapi[standard]>=0.141.1",
+    "psycopg[binary]>=3.3.4",
     "pydantic-settings>=2.14.2",
+    "sqlalchemy>=2.0.52",
 ]

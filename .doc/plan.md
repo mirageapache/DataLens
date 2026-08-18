@@ -252,8 +252,8 @@ backend/
 
 ### Phase 1｜後端基礎建設（第 1 ～ 2 週）
 
-- [ ] 初始化專案結構（FastAPI + SQLAlchemy + Alembic）
-- [ ] Docker Compose 配置：PostgreSQL + Redis + FastAPI
+- [✅] 初始化專案結構（FastAPI + SQLAlchemy + Alembic）
+- [✅] Docker Compose 配置：PostgreSQL + Redis + FastAPI
 - [ ] 設計並建立 DB Schema，執行初始 Migration
 - [ ] 實作 Dataset 上傳 API（同步版本），完成基本 CRUD
 - [ ] 建立 GitHub Repository，設定 GitHub Projects 看板
