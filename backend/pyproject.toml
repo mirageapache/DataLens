@@ -1,10 +1,26 @@
 [project]
 name = "datalens-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "DataLens backend — 資料分析與系統監控整合平台的 FastAPI 服務"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic>=1.19.1",
     "fastapi[standard]>=0.141.1",
+    "openpyxl>=3.1.5",
+    "pandas>=2.3.2",
+    "psycopg[binary]>=3.3.4",
     "pydantic-settings>=2.14.2",
+    "sqlalchemy>=2.0.52",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "pytest-mock>=3.14.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]

@@ -8,7 +8,8 @@ services:
       - /app/.venv            # ponytail: 用容器內的 venv，別被 host 的 Windows .venv 蓋掉
       - uploads:/app/uploads  # 與 celery-worker 共用（worker Phase 2 再加）
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # 預設值作為 fallback 保險，應與 .env.example 保持一致
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-datalens}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       - postgres
@@ -19,9 +20,10 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      # 預設值作為 fallback 保險，應與 .env.example 保持一致
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-datalens}
     volumes:
       - pgdata:/var/lib/postgresql/data
 
