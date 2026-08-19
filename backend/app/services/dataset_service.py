@@ -9,6 +9,8 @@ from app.models.dataset import Dataset, DatasetColumn
 from app.repositories.dataset_repository import DatasetRepository
 from app.schemas.dataset import DatasetListResponse, DatasetRead, DatasetUpdate
 
+MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+
 
 class DatasetService:
     def __init__(self, db: Session):
@@ -31,6 +33,11 @@ class DatasetService:
         saved_name = f"{uuid4().hex}{suffix}"
         saved_path = self.upload_root / saved_name
         file_bytes = file.file.read()
+        if len(file_bytes) > MAX_UPLOAD_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                detail=f"File too large. Maximum allowed size is {MAX_UPLOAD_SIZE // (1024 * 1024)} MB",
+            )
         saved_path.write_bytes(file_bytes)
 
         try:
@@ -47,7 +54,7 @@ class DatasetService:
 
         dataset = Dataset(
             filename=file.filename,
-            file_path=str(Path("uploads") / saved_name),
+            file_path=saved_name,
             row_count=int(dataframe.shape[0]),
             column_count=int(dataframe.shape[1]),
             status="ready",
@@ -111,6 +118,10 @@ class DatasetService:
         if not dataset:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found")
 
-        saved_path = Path(__file__).resolve().parents[2] / dataset.file_path
+        saved_path = self.upload_root / dataset.file_path
+        # 先刪除實體檔案再刪 DB，避免 commit 後檔案刪除失敗導致孤兒檔案
+        try:
+            saved_path.unlink(missing_ok=True)
+        except OSError:
+            pass  # 檔案刪除失敗不阻斷流程，殘留檔案可稍後清理
         self.repo.delete(dataset)
-        saved_path.unlink(missing_ok=True)
