@@ -35,7 +35,7 @@ services:
 
   celery-worker:
     build: ./backend
-    command: celery -A app.core.celery_app worker --loglevel=info
+    command: uv run celery -A app.core.celery_app worker --loglevel=info
     volumes:
       - ./backend:/app
       - /app/.venv
