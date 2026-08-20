@@ -20,61 +20,46 @@ class AnalysisService:
         self.analyzer = PandasAnalyzer()
 
     def run_analysis(self, db: Session, req: AnalysisRunRequest) -> AnalysisTask:
-        # 1. Check if dataset exists
+        """
+        觸發資料分析任務。
+        此方法會先檢查資料集是否存在，接著在資料庫建立一個狀態為 PENDING 的任務，
+        並將實際的分析工作派發給 Celery 背景 worker 處理。
+        """
+        # 1. 檢查資料集是否存在
         dataset = self.dataset_repo.get(req.dataset_id)
         if not dataset:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Dataset {req.dataset_id} not found."
+                detail=f"找不到指定的資料集 (ID: {req.dataset_id})"
             )
 
-        # 2. Create Task
+        # 2. 在資料庫建立一筆分析任務記錄
         task = self.analysis_repo.create_task(req.dataset_id, req.task_type)
 
         try:
-            # 3. Read Data (For Phase 2-1 this is synchronous)
-            self.analysis_repo.update_task_status(task.id, "STARTED")
+            # 3. 派發任務給 Celery
+            from app.tasks.analysis_tasks import run_analysis_task
             
-            # Use pandas to read the file
-            if dataset.file_path.endswith('.csv'):
-                df = pd.read_csv(dataset.file_path)
-            elif dataset.file_path.endswith(('.xls', '.xlsx')):
-                df = pd.read_excel(dataset.file_path)
-            else:
-                raise ValueError("Unsupported file format for analysis.")
-
-            # 4. Run Analysis
-            results_data = []
+            # 將 Pydantic model 轉換為字典格式，相容 v1 與 v2 的寫法
+            req_dict = req.model_dump() if hasattr(req, "model_dump") else req.dict()
             
-            if req.task_type == "descriptive":
-                results_data = self.analyzer.descriptive_stats(df, req.target_columns)
-            elif req.task_type == "correlation":
-                results_data = self.analyzer.correlation_matrix(df, req.target_columns)
-            elif req.task_type == "group_by":
-                if not req.group_by_column:
-                    raise ValueError("group_by_column is required for group_by analysis")
-                agg_funcs = req.agg_funcs or ["mean", "sum", "count"]
-                results_data = self.analyzer.group_by_aggregation(df, req.group_by_column, agg_funcs)
-            elif req.task_type == "time_series":
-                freq = req.freq or "M"
-                results_data = self.analyzer.time_series_trend(df, freq)
-            else:
-                raise ValueError(f"Unknown task type: {req.task_type}")
-
-            # 5. Save Results
-            self.analysis_repo.save_analysis_results(task.id, results_data)
+            # 非同步執行
+            celery_task = run_analysis_task.delay(task.id, req_dict)
             
-            # 6. Update Task Status
-            self.analysis_repo.update_task_status(task.id, "COMPLETED")
+            # 4. 更新該任務對應的 Celery Task ID
+            task.celery_task_id = celery_task.id
+            db.commit()
 
         except Exception as e:
+            # 發生例外時，將任務標記為失敗
             self.analysis_repo.update_task_status(task.id, "FAILED")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Analysis failed: {str(e)}"
+                detail=f"派發分析任務失敗: {str(e)}"
             )
 
-        return self.analysis_repo.get_task(task.id)
+        # 回傳已建立的任務資訊 (狀態為 PENDING)
+        return task
 
     def get_task(self, task_id: int) -> AnalysisTask:
         task = self.analysis_repo.get_task(task_id)

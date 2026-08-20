@@ -12,6 +12,8 @@ dependencies = [
     "psycopg[binary]>=3.3.4",
     "pydantic-settings>=2.14.2",
     "sqlalchemy>=2.0.52",
+    "celery>=5.4.0",
+    "redis>=5.2.1",
 ]
 
 [project.optional-dependencies]
