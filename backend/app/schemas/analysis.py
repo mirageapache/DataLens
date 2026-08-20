@@ -1,0 +1,58 @@
+import datetime as dt
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+
+class AnalysisRunRequest(BaseModel):
+    """分析請求模型"""
+
+    dataset_id: int
+    task_type: Literal["descriptive", "correlation", "group_by", "time_series"]
+    
+    # 針對特定分析的額外參數
+    target_columns: list[str] | None = Field(
+        default=None, description="要進行分析的特定欄位，若未提供則分析所有支援的欄位"
+    )
+    
+    # 時間序列特有參數 (Option 2: 透過前端傳入參數去調整資料呈現的維度)
+    freq: Literal["D", "W", "M", "Y"] | None = Field(
+        default=None, description="時間序列聚合頻率：D(日), W(週), M(月), Y(年)"
+    )
+    
+    # 分組特有參數
+    group_by_column: str | None = Field(default=None, description="分組依據的欄位")
+    agg_funcs: list[str] | None = Field(
+        default=None, description="聚合函式列表，如 ['sum', 'mean', 'count']"
+    )
+
+
+class AnalysisResultRead(BaseModel):
+    """單筆分析結果的回傳模型"""
+
+    id: int
+    task_id: int
+    metric_name: str
+    metric_value: float | None = None
+    chart_data: dict[str, Any] | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class AnalysisTaskRead(BaseModel):
+    """分析任務狀態與基本資訊的回傳模型"""
+
+    id: int
+    dataset_id: int
+    task_type: str
+    status: str
+    started_at: dt.datetime | None = None
+    completed_at: dt.datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class AnalysisTaskDetailRead(AnalysisTaskRead):
+    """包含分析結果的完整任務資訊"""
+
+    results: list[AnalysisResultRead] = Field(default_factory=list)
