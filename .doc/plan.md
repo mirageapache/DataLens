@@ -266,9 +266,9 @@ backend/
 
 - [✅] 整合 pandas 實作統計分析模組
 - [✅] Celery 整合：大檔案分析改為非同步任務，前端輪詢狀態
-- [ ] 分析結果序列化並儲存至 PostgreSQL，實作 Window Function 查詢
-- [ ] 完成分析結果 API（含圖表 JSON 輸出格式）
-- [ ] 撰寫 Integration Test 覆蓋完整分析流程
+- [✅] 分析結果序列化並儲存至 PostgreSQL，實作 Window Function 查詢
+- [✅] 完成分析結果 API（含圖表 JSON 輸出格式）
+- [✅] 撰寫 Integration Test 覆蓋完整分析流程
 
 **里程碑 M2**：分析引擎完成，非同步任務正常運作
 

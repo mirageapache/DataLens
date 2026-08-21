@@ -7,6 +7,7 @@ from app.schemas.dataset import (
 from app.schemas.analysis import (
     AnalysisRunRequest,
     AnalysisResultRead,
+    AnalysisResultSummaryRead,
     AnalysisTaskRead,
     AnalysisTaskDetailRead,
     TaskExecutionTrendRead,
@@ -20,6 +21,7 @@ __all__ = [
     "DatasetUpdate",
     "AnalysisRunRequest",
     "AnalysisResultRead",
+    "AnalysisResultSummaryRead",
     "AnalysisTaskRead",
     "AnalysisTaskDetailRead",
     "TaskExecutionTrendRead",

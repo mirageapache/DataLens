@@ -9,6 +9,7 @@ from app.schemas.analysis import (
     AnalysisTaskRead,
     AnalysisTaskDetailRead,
     AnalysisResultRead,
+    AnalysisResultSummaryRead,
     AnalysisTaskListResponse,
     TaskExecutionTrendRead,
 )
@@ -78,7 +79,7 @@ def get_task(
     return task
 
 
-@router.get("/tasks/{task_id}/results", response_model=list[AnalysisResultRead])
+@router.get("/tasks/{task_id}/results", response_model=list[AnalysisResultSummaryRead])
 def get_task_results(
     task_id: int,
     service: AnalysisService = Depends(get_analysis_service),
@@ -87,7 +88,6 @@ def get_task_results(
     取得分析結果 (不包含 chart_data，以減輕 payload)
     """
     task = service.get_task(task_id)
-    # We can create a schema to exclude chart_data if needed, but for now we just return them
     return task.results
 
 

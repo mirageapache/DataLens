@@ -27,16 +27,19 @@ class AnalysisRunRequest(BaseModel):
     )
 
 
-class AnalysisResultRead(BaseModel):
-    """單筆分析結果的回傳模型"""
-
+class AnalysisResultSummaryRead(BaseModel):
+    """單筆分析結果的回傳模型 (不包含 chart_data 以減輕 Payload)"""
     id: int
     task_id: int
     metric_name: str
     metric_value: float | None = None
-    chart_data: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
+
+
+class AnalysisResultRead(AnalysisResultSummaryRead):
+    """單筆分析結果的完整回傳模型 (包含 chart_data)"""
+    chart_data: dict[str, Any] | None = None
 
 
 class AnalysisTaskRead(BaseModel):
