@@ -56,3 +56,20 @@ class AnalysisTaskDetailRead(AnalysisTaskRead):
     """包含分析結果的完整任務資訊"""
 
     results: list[AnalysisResultRead] = Field(default_factory=list)
+
+
+class TaskExecutionTrendRead(BaseModel):
+    """任務執行時間趨勢模型"""
+    task_id: int
+    task_type: str
+    execution_time_ms: float
+    prev_execution_time_ms: float | None = None
+    time_diff_ms: float | None = None
+
+
+class AnalysisTaskListResponse(BaseModel):
+    """分析任務列表的分頁回應模型"""
+    items: list[AnalysisTaskRead]
+    total: int
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)

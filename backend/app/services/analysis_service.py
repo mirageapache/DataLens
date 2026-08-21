@@ -70,5 +70,8 @@ class AnalysisService:
             )
         return task
 
-    def list_tasks(self, dataset_id: int | None = None) -> list[AnalysisTask]:
-        return self.analysis_repo.list_tasks(dataset_id)
+    def list_tasks(self, page: int = 1, page_size: int = 20, dataset_id: int | None = None) -> tuple[list[AnalysisTask], int]:
+        return self.analysis_repo.list_tasks(page, page_size, dataset_id)
+
+    def get_task_trend(self, dataset_id: int | None = None) -> list[dict]:
+        return self.analysis_repo.get_task_execution_trend(dataset_id)

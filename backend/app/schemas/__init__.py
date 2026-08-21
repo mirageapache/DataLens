@@ -9,6 +9,8 @@ from app.schemas.analysis import (
     AnalysisResultRead,
     AnalysisTaskRead,
     AnalysisTaskDetailRead,
+    TaskExecutionTrendRead,
+    AnalysisTaskListResponse,
 )
 
 __all__ = [
@@ -20,4 +22,6 @@ __all__ = [
     "AnalysisResultRead",
     "AnalysisTaskRead",
     "AnalysisTaskDetailRead",
+    "TaskExecutionTrendRead",
+    "AnalysisTaskListResponse",
 ]

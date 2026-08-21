@@ -9,6 +9,8 @@ from app.schemas.analysis import (
     AnalysisTaskRead,
     AnalysisTaskDetailRead,
     AnalysisResultRead,
+    AnalysisTaskListResponse,
+    TaskExecutionTrendRead,
 )
 from app.services.analysis_service import AnalysisService
 
@@ -34,16 +36,34 @@ def run_analysis(
     return task
 
 
-@router.get("/tasks", response_model=list[AnalysisTaskRead])
+@router.get("/tasks", response_model=AnalysisTaskListResponse)
 def list_tasks(
+    page: int = Query(1, ge=1, description="頁碼"),
+    page_size: int = Query(20, ge=1, le=100, description="每頁筆數"),
     dataset_id: int | None = Query(None, description="依據 dataset_id 篩選"),
     service: AnalysisService = Depends(get_analysis_service),
 ):
     """
-    列出分析任務歷史
+    列出分析任務歷史 (包含 ROW_NUMBER() 分頁實作)
     """
-    tasks = service.list_tasks(dataset_id=dataset_id)
-    return tasks
+    tasks, total = service.list_tasks(page=page, page_size=page_size, dataset_id=dataset_id)
+    return AnalysisTaskListResponse(
+        items=tasks,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
+
+
+@router.get("/tasks/trend", response_model=list[TaskExecutionTrendRead])
+def get_task_trend(
+    dataset_id: int | None = Query(None, description="依據 dataset_id 篩選"),
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    """
+    取得任務執行時間趨勢 (包含 LAG() 函數實作)
+    """
+    return service.get_task_trend(dataset_id=dataset_id)
 
 
 @router.get("/tasks/{task_id}", response_model=AnalysisTaskRead)
