@@ -33,6 +33,20 @@ services:
     # host 目前沒東西連 redis（且 6379 已被別的專案容器佔用）。
     # 要用 GUI 從本機連時再加：ports: ["6381:6379"]（挑沒被佔的 port）。
 
+  celery-worker:
+    build: ./backend
+    command: uv run celery -A app.core.celery_app worker --loglevel=info
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+      - uploads:/app/uploads
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-datalens}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
 volumes:
   uploads:
   pgdata:

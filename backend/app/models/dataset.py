@@ -21,6 +21,10 @@ class Dataset(Base):
         back_populates="dataset", cascade="all, delete-orphan"
     )
 
+    analysis_tasks: Mapped[list["AnalysisTask"]] = relationship(
+        back_populates="dataset", cascade="all, delete-orphan"
+    )
+
 
 class DatasetColumn(Base):
     __tablename__ = "dataset_columns"
