@@ -19,6 +19,9 @@ class AnalysisRunRequest(BaseModel):
     freq: Literal["D", "W", "M", "Y"] | None = Field(
         default=None, description="時間序列聚合頻率：D(日), W(週), M(月), Y(年)"
     )
+    time_column: str | None = Field(
+        default=None, description="時間序列的時間欄位，若未提供則由後端自動推測"
+    )
     
     # 分組特有參數
     group_by_column: str | None = Field(default=None, description="分組依據的欄位")

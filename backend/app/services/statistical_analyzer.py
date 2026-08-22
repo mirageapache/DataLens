@@ -24,7 +24,7 @@ class BaseAnalyzer(ABC):
 
 
 class PandasAnalyzer(BaseAnalyzer):
-    MAX_ROWS_LIMIT = 50000
+    MAX_ROWS_LIMIT = 500000
 
     def _check_limit(self, df: pd.DataFrame) -> None:
         if len(df) > self.MAX_ROWS_LIMIT:
@@ -113,26 +113,31 @@ class PandasAnalyzer(BaseAnalyzer):
             "chart_data": chart_data
         }]
 
-    def time_series_trend(self, df: pd.DataFrame, freq: str = "M") -> list[dict[str, Any]]:
+    def time_series_trend(self, df: pd.DataFrame, freq: str = "M", time_column: str | None = None) -> list[dict[str, Any]]:
         self._check_limit(df)
         
-        datetime_cols = df.select_dtypes(include=["datetime", "datetimetz"]).columns
-        
-        # If no explicit datetime column, try to infer it by parsing strings
-        if datetime_cols.empty:
-            object_cols = df.select_dtypes(include=["object"]).columns
-            for col in object_cols:
-                try:
-                    df[col] = pd.to_datetime(df[col])
-                    datetime_cols = [col]
-                    break
-                except (ValueError, TypeError):
-                    continue
-        
-        if not datetime_cols or len(datetime_cols) == 0:
-            return []
+        if time_column and time_column in df.columns:
+            df[time_column] = pd.to_datetime(df[time_column], errors="coerce")
+            time_col = time_column
+        else:
+            datetime_cols = df.select_dtypes(include=["datetime", "datetimetz"]).columns
             
-        time_col = datetime_cols[0]
+            # If no explicit datetime column, try to infer it by parsing strings
+            if datetime_cols.empty:
+                object_cols = df.select_dtypes(include=["object"]).columns
+                for col in object_cols:
+                    try:
+                        df[col] = pd.to_datetime(df[col])
+                        datetime_cols = [col]
+                        break
+                    except (ValueError, TypeError):
+                        continue
+            
+            if not datetime_cols or len(datetime_cols) == 0:
+                return []
+                
+            time_col = datetime_cols[0]
+            
         numeric_df = df.select_dtypes(include="number")
         
         if numeric_df.empty:

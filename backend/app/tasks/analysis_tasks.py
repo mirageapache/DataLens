@@ -60,7 +60,8 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
             results_data = analyzer.group_by_aggregation(df, group_by_column, agg_funcs)
         elif task_type == "time_series":
             freq = req_dict.get("freq") or "M"
-            results_data = analyzer.time_series_trend(df, freq)
+            time_column = req_dict.get("time_column")
+            results_data = analyzer.time_series_trend(df, freq=freq, time_column=time_column)
         else:
             raise ValueError(f"未知的任務類型: {task_type}")
 
