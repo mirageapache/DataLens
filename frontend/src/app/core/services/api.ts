@@ -52,6 +52,14 @@ export class ApiService {
     return this.http.get<DatasetDetail>(`${this.apiUrl}/datasets/${id}`);
   }
 
+  /**
+   * 刪除指定的資料集
+   * @param id 資料集 ID
+   */
+  deleteDataset(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/datasets/${id}`);
+  }
+
   // --- Analysis API ---
 
   /**
