@@ -84,6 +84,10 @@ export interface AnalysisTask {
   celery_task_id?: string;
   /** 任務狀態 (例如: PENDING, STARTED, COMPLETED, FAILED) */
   status: string;
+  /** 錯誤訊息 (如果狀態為 FAILED) */
+  error_message?: string;
+  /** 建立時間 (ISO 8601 格式字串) */
+  created_at: string;
   /** 任務開始時間 (ISO 8601 格式字串) */
   started_at?: string;
   /** 任務完成時間 (ISO 8601 格式字串) */

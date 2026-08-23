@@ -1,1 +1,164 @@
-<p>analysis-results-page works!</p>
+<div class="max-w-6xl mx-auto space-y-6 pt-4">
+  <!-- Top Bar -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <button (click)="location.back()" class="text-gray-500 hover:text-matPrimary flex items-center space-x-1 text-sm transition">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>返回上一頁</span>
+      </button>
+      <span class="text-gray-300">/</span>
+      <span class="text-xs font-mono bg-gray-200 text-gray-700 px-2 py-0.5 rounded">Task ID: task_{{ taskId }}</span>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="flex justify-center p-12">
+      <i class="fa-solid fa-spinner fa-spin text-4xl text-matPrimary"></i>
+    </div>
+  }
+
+  @if (!isLoading && task) {
+    <!-- Task Overview Banner -->
+    <div class="bg-matSurface rounded-xl border border-matBorder shadow-sm p-5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-4">
+        <div class="w-12 h-12 bg-indigo-50 text-matPrimary rounded-xl flex items-center justify-center text-2xl shrink-0">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold text-gray-800">綜合分析結果 Dashboard</h1>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+              SUCCESS
+            </span>
+          </div>
+          <p class="text-xs text-matTextSecondary mt-1">
+            目標資料集：<span class="font-semibold text-gray-700">Dataset #{{ task.dataset_id }}</span>
+            • 建立時間：{{ task.created_at | date:'yyyy-MM-dd HH:mm:ss' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis Results Tabs -->
+    <div class="bg-matSurface rounded-xl border border-matBorder shadow-sm overflow-hidden">
+      <!-- Tab Headers -->
+      <div class="flex border-b border-matBorder bg-gray-50/50 px-4 text-sm font-medium text-gray-600">
+        <button (click)="activeTab = 'descriptive'" [ngClass]="{'border-b-2 border-matPrimary text-matPrimary font-bold': activeTab === 'descriptive'}" class="px-5 py-3.5 flex items-center space-x-2 transition">
+          <i class="fa-solid fa-calculator"></i>
+          <span>描述性統計與分佈</span>
+        </button>
+        <button (click)="activeTab = 'correlation'" [ngClass]="{'border-b-2 border-matPrimary text-matPrimary font-bold': activeTab === 'correlation'}" class="px-5 py-3.5 hover:text-matPrimary flex items-center space-x-2 transition">
+          <i class="fa-solid fa-border-all"></i>
+          <span>相關性熱力圖</span>
+        </button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="p-6">
+        
+        <!-- Tab 1: Descriptive Statistics & Histogram -->
+        @if (activeTab === 'descriptive') {
+          <div class="space-y-6">
+            <!-- Table View -->
+            <div>
+              <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center space-x-2">
+                <i class="fa-solid fa-table-cells text-matPrimary"></i>
+                <span>連續型欄位統計摘要表</span>
+              </h3>
+              <div class="overflow-x-auto border border-matBorder rounded-lg">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-gray-50 border-b border-matBorder text-gray-500 uppercase font-semibold">
+                    <tr>
+                      <th class="px-4 py-3">欄位名稱 (Metric)</th>
+                      <th class="px-4 py-3">Mean (平均值)</th>
+                      <th class="px-4 py-3">Std (標準差)</th>
+                      <th class="px-4 py-3">Min</th>
+                      <th class="px-4 py-3">25%</th>
+                      <th class="px-4 py-3">50% (中位數)</th>
+                      <th class="px-4 py-3">75%</th>
+                      <th class="px-4 py-3">Max</th>
+                      <th class="px-4 py-3">Skewness (偏態)</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-matBorder">
+                    @for (stat of statsTable; track stat.colName) {
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 font-bold text-gray-800">{{ stat.colName }}</td>
+                        <td class="px-4 py-3 font-mono text-gray-700">{{ stat.mean | number:'1.0-2' }}</td>
+                        <td class="px-4 py-3 font-mono text-gray-700">{{ stat.std | number:'1.0-2' }}</td>
+                        <td class="px-4 py-3 font-mono text-gray-700">{{ stat.min | number:'1.0-2' }}</td>
+                        <td class="px-4 py-3 font-mono text-gray-700">{{ stat['25%'] | number:'1.0-2' }}</td>
+                        <td class="px-4 py-3 font-mono text-gray-700">{{ stat['50%'] | number:'1.0-2' }}</td>
+                        <td class="px-4 py-3 font-mono text-gray-700">{{ stat['75%'] | number:'1.0-2' }}</td>
+                        <td class="px-4 py-3 font-mono text-gray-700">{{ stat.max | number:'1.0-2' }}</td>
+                        <td class="px-4 py-3 font-mono text-indigo-600 font-semibold">{{ stat.skewness | number:'1.0-2' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Distribution Chart Container -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="border border-matBorder rounded-xl p-4 bg-gray-50/50 space-y-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-bold text-gray-800">數值分佈模擬 (常態分佈曲線)</h3>
+                  <div class="flex items-center space-x-2">
+                    <select (change)="onHistColChange($event)" class="text-xs bg-white border border-matBorder px-2.5 py-1 rounded focus:outline-none focus:border-matPrimary">
+                      @for (col of histogramColumns; track col) {
+                        <option [value]="col">{{ col }}</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <!-- ECharts Canvas Container -->
+                @if (histogramOptions) {
+                  <div echarts [options]="histogramOptions" class="w-full h-72"></div>
+                }
+              </div>
+
+              <!-- Boxplot Container -->
+              <div class="border border-matBorder rounded-xl p-4 bg-gray-50/50 space-y-3">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-sm font-bold text-gray-800">所有數值特徵 - 盒鬚圖比對</h3>
+                </div>
+                @if (boxplotOptions) {
+                  <div echarts [options]="boxplotOptions" class="w-full h-72"></div>
+                } @else {
+                  <div class="w-full h-72 flex items-center justify-center text-gray-400 text-sm">
+                    無法產生盒鬚圖
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Tab 2: Correlation Heatmap -->
+        @if (activeTab === 'correlation') {
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-gray-800">Pearson 相關係數熱力圖 (Correlation Heatmap)</h3>
+                <p class="text-xs text-matTextSecondary mt-0.5">數值越接近 1.0 代表正相關越強，接近 -1.0 代表負相關</p>
+              </div>
+            </div>
+
+            <!-- ECharts Canvas Container -->
+            <div class="border border-matBorder rounded-xl p-4 bg-gray-50/50 overflow-x-auto">
+              @if (heatmapOptions) {
+                <div echarts [options]="heatmapOptions" class="w-full min-w-[500px] h-96"></div>
+              } @else {
+                <div class="w-full h-32 flex items-center justify-center text-gray-400 text-sm">
+                  無相關性矩陣資料
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -36,10 +36,14 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
         analysis_repo.update_task_status(task.id, "STARTED")
 
         # 1. 讀取資料
+        from pathlib import Path
+        upload_root = Path(__file__).resolve().parents[2] / "uploads"
+        full_file_path = upload_root / dataset.file_path
+        
         if dataset.file_path.endswith('.csv'):
-            df = pd.read_csv(dataset.file_path)
+            df = pd.read_csv(full_file_path)
         elif dataset.file_path.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(dataset.file_path)
+            df = pd.read_excel(full_file_path)
         else:
             raise ValueError("不支援的分析檔案格式。")
 
@@ -50,6 +54,9 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
 
         if task_type == "descriptive":
             results_data = analyzer.descriptive_stats(df, target_columns)
+            # 為了讓前端 Dashboard (Tab 1 & Tab 2) 都有資料，把 correlation 也放進去
+            corr_data = analyzer.correlation_matrix(df, target_columns)
+            results_data.extend(corr_data)
         elif task_type == "correlation":
             results_data = analyzer.correlation_matrix(df, target_columns)
         elif task_type == "group_by":

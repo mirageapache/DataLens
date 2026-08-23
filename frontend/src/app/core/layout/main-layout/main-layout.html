@@ -29,13 +29,13 @@
   <!-- Left SideNav (mat-sidenav) -->
   <aside class="w-60 bg-matSurface border-r border-matBorder flex flex-col justify-between py-2 shrink-0">
     <nav class="space-y-1 px-2">
-      <a routerLink="/datasets" routerLinkActive="bg-indigo-50 text-matPrimary font-medium" [routerLinkActiveOptions]="{exact: false}" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-matTextSecondary hover:bg-gray-100 font-medium text-sm transition">
-        <i class="fa-solid fa-folder-closed text-base"></i>
-        <span>資料集</span>
+      <a routerLink="/datasets" routerLinkActive="bg-indigo-50 text-matPrimary font-medium" [routerLinkActiveOptions]="{exact: true}" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-matTextSecondary hover:bg-gray-100 font-medium text-sm transition">
+        <i class="fa-solid fa-folder-closed text-base" [class.text-matPrimary]="router.url === '/datasets'"></i>
+        <span [class.text-matPrimary]="router.url === '/datasets'">資料集</span>
       </a>
-      <a class="flex items-center space-x-3 px-4 py-3 rounded-lg text-matTextSecondary hover:bg-gray-100 font-medium text-sm transition cursor-not-allowed">
-        <i class="fa-solid fa-chart-column text-base"></i>
-        <span>分析</span>
+      <a routerLink="/analysis/history" routerLinkActive="bg-indigo-50 text-matPrimary font-medium" [routerLinkActiveOptions]="{exact: false}" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-matTextSecondary hover:bg-gray-100 font-medium text-sm transition">
+        <i class="fa-solid fa-chart-column text-base" [class.text-matPrimary]="router.url.includes('/analysis')"></i>
+        <span [class.text-matPrimary]="router.url.includes('/analysis')">分析歷史</span>
       </a>
     </nav>
 
