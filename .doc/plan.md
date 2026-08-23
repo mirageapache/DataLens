@@ -277,8 +277,8 @@ backend/
 ### Phase 3｜前端開發（第 5 ～ 7 週）
 
 - [✅] 步驟 1：前端專案初始化與 Docker 化環境建置（Angular 21 + TailwindCSS + docker-compose 整合）
-- [ ] 步驟 2：核心佈局 (Layout) 與路由 (Routing) 建立（切分共用 Header / Navbar）
-- [ ] 步驟 3：後端 API 服務串接 (Service Layer 實作)
+- [✅] 步驟 2：核心佈局 (Layout) 與路由 (Routing) 建立（切分共用 Header / Navbar）
+- [✅] 步驟 3：後端 API 服務串接 (Service Layer 實作)
 - [ ] 步驟 4：實作資料上傳與列表頁（支援單檔 50 MB 限制與拖曳上傳）
 - [ ] 步驟 5：實作分析任務狀態與輪詢頁面（RxJS 輪詢機制）
 - [ ] 步驟 6：實作圖表與結果頁面（整合 ngx-echarts 渲染至少三種圖表）
