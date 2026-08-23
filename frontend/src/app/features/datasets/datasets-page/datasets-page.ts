@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api';
 import { Dataset } from '../../../core/models/api.models';
 
@@ -12,6 +13,7 @@ import { Dataset } from '../../../core/models/api.models';
 })
 export class DatasetsPage implements OnInit {
   private api = inject(ApiService);
+  private router = inject(Router);
 
   datasets: Dataset[] = [];
   totalCount = 0;
@@ -124,7 +126,7 @@ export class DatasetsPage implements OnInit {
     this.api.runAnalysis({ dataset_id: datasetId, task_type: 'descriptive' }).subscribe({
       next: (task) => {
         this.showToast('分析任務已觸發！', 'success');
-        // TODO: Navigate to analysis status page
+        this.router.navigate(['/analysis', task.id, 'status']);
       },
       error: (err) => {
         this.showToast('觸發分析失敗', 'error');
