@@ -1,3 +1,30 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
 
-@import 'tailwindcss';
+@theme {
+  --color-matPrimary: #3f51b5;
+  --color-matPrimaryHover: #303f9f;
+  --color-matBg: #f5f5f5;
+  --color-matSurface: #ffffff;
+  --color-matBorder: #e0e0e0;
+  --color-matTextPrimary: rgba(0, 0, 0, 0.87);
+  --color-matTextSecondary: rgba(0, 0, 0, 0.60);
+  
+  --font-sans: "Roboto", "Noto Sans TC", sans-serif;
+}
+
+@layer utilities {
+  .mat-elevation-1 {
+    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12);
+  }
+  .mat-elevation-2 {
+    box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
+  }
+  .drag-over {
+    border-color: var(--color-matPrimary) !important;
+    background-color: #e8eaf6 !important;
+  }
+}
+
+body {
+  @apply bg-matBg font-sans text-matTextPrimary antialiased min-h-screen flex flex-col;
+}

@@ -31,7 +31,7 @@ def run_analysis(
     service: AnalysisService = Depends(get_analysis_service),
 ):
     """
-    觸發分析任務 (Phase 2-1: 同步執行)
+    觸發分析任務 (Phase 2-2: 改為非同步執行)
     """
     task = service.run_analysis(db, req)
     return task
