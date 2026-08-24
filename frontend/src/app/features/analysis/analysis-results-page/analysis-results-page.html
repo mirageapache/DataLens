@@ -122,7 +122,7 @@
                   <div class="flex items-center space-x-2">
                     <select (change)="onHistColChange($event)" class="text-xs bg-white border border-matBorder px-2.5 py-1 rounded focus:outline-none focus:border-matPrimary">
                       @for (col of histogramColumns; track col) {
-                        <option [value]="col">{{ col }}</option>
+                        <option [value]="col" [selected]="col === selectedHistCol">{{ col }}</option>
                       }
                     </select>
                   </div>
@@ -131,6 +131,11 @@
                 <!-- ECharts Canvas Container -->
                 @if (histogramOptions) {
                   <div echarts [options]="histogramOptions" class="w-full h-72"></div>
+                } @else {
+                  <div class="w-full h-72 flex flex-col items-center justify-center text-gray-400 text-sm space-y-2">
+                    <i class="fa-solid fa-chart-bar text-3xl opacity-50"></i>
+                    <span>暫無分佈圖資料 (可能為舊任務或資料異常)</span>
+                  </div>
                 }
               </div>
 

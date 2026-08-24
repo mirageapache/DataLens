@@ -8,7 +8,7 @@ class AnalysisRunRequest(BaseModel):
     """分析請求模型"""
 
     dataset_id: int
-    task_type: Literal["descriptive", "correlation", "group_by", "time_series"]
+    task_type: Literal["descriptive", "correlation", "descriptive_with_correlation", "group_by", "time_series"]
     
     # 針對特定分析的額外參數
     target_columns: list[str] | None = Field(
