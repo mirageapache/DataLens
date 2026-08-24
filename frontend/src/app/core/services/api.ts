@@ -11,7 +11,8 @@ import {
   AnalysisTaskListResponse,
   AnalysisResultSummary,
   TaskExecutionTrend,
-  DatasetPreviewResponse
+  DatasetPreviewResponse,
+  ChartData
 } from '../models/api.models';
 
 @Injectable({
@@ -129,7 +130,7 @@ export class ApiService {
    * 取得任務對應圖表所需的 JSON 結構化資料
    * @param taskId 任務 ID
    */
-  getAnalysisTaskCharts(taskId: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/analysis/tasks/${taskId}/charts`);
+  getAnalysisTaskCharts(taskId: number): Observable<ChartData> {
+    return this.http.get<ChartData>(`${this.apiUrl}/analysis/tasks/${taskId}/charts`);
   }
 }

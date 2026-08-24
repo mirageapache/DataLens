@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ApiService } from '../../../core/services/api';
@@ -8,7 +8,6 @@ import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-analysis-results-page',
-  standalone: true,
   imports: [CommonModule, RouterModule, NgxEchartsModule],
   templateUrl: './analysis-results-page.html'
 })
@@ -22,6 +21,7 @@ export class AnalysisResultsPage implements OnInit {
   results: AnalysisResultSummary[] = [];
   chartsData: any = null;
   isLoading = true;
+  error: string | null = null;
 
   activeTab: 'descriptive' | 'correlation' = 'descriptive';
 
@@ -49,6 +49,7 @@ export class AnalysisResultsPage implements OnInit {
 
   loadData() {
     this.isLoading = true;
+    this.error = null;
     forkJoin({
       task: this.api.getAnalysisTask(this.taskId),
       results: this.api.getAnalysisTaskResults(this.taskId),
@@ -62,6 +63,7 @@ export class AnalysisResultsPage implements OnInit {
         this.isLoading = false;
       },
       error: () => {
+        this.error = '無法載入分析結果，請確認伺服器連線後重試。';
         this.isLoading = false;
       }
     });
@@ -135,40 +137,34 @@ export class AnalysisResultsPage implements OnInit {
   }
 
   renderHistogram(colName: string) {
-    // In our backend, descriptive_stats just returns mean/std etc. It doesn't actually return histogram bins.
-    // For demonstration, we will fake a histogram based on mean and std, or just show a placeholder chart.
-    // In a real app, backend should return histogram buckets for this column.
-    // We will render a normal distribution curve based on mean and std.
     const stat = this.statsTable.find(s => s.colName === colName);
     if (!stat) return;
 
-    const mean = stat.mean || 0;
-    const std = stat.std || 1;
-    
-    // Generate some fake normal distribution curve points
-    const data = [];
-    const xAxisData = [];
-    for (let i = -3; i <= 3; i += 0.5) {
-      const x = mean + i * std;
-      // Normal distribution PDF formula
-      const y = (1 / (std * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / std, 2));
-      xAxisData.push(x.toFixed(2));
-      data.push(y.toFixed(4));
+    const bins = stat.histogram_bins;
+    // 後端已回傳真實分桶資料，直接繪製柱狀圖
+    if (bins && bins.labels?.length > 0) {
+      this.histogramOptions = {
+        color: ['#3f51b5'],
+        tooltip: { trigger: 'axis', formatter: '{b}<br/>Count: {c}' },
+        grid: { top: '10%', bottom: '20%', left: '10%', right: '5%' },
+        xAxis: {
+          type: 'category',
+          data: bins.labels,
+          name: colName,
+          axisLabel: { rotate: 30, fontSize: 10 }
+        },
+        yAxis: { type: 'value', name: 'Count' },
+        series: [{
+          data: bins.counts,
+          type: 'bar',
+          barMaxWidth: 40,
+          itemStyle: { color: '#3f51b5', opacity: 0.8 }
+        }]
+      };
+    } else {
+      // Fallback：後端無分桶資料，改顯示無資料提示
+      this.histogramOptions = null;
     }
-
-    this.histogramOptions = {
-      color: ['#3f51b5'],
-      tooltip: { trigger: 'axis' },
-      grid: { top: '10%', bottom: '15%', left: '8%', right: '5%' },
-      xAxis: { type: 'category', data: xAxisData, name: colName },
-      yAxis: { type: 'value', name: 'Probability Density' },
-      series: [{
-        data: data,
-        type: 'line',
-        smooth: true,
-        areaStyle: { opacity: 0.2 }
-      }]
-    };
   }
 
   onHistColChange(event: Event) {

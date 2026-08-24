@@ -5,10 +5,8 @@ import { DatasetPreviewResponse } from '../../../core/models/api.models';
 
 @Component({
   selector: 'app-dataset-preview',
-  standalone: true,
   imports: [CommonModule],
-  templateUrl: './dataset-preview.html',
-  styleUrl: './dataset-preview.css'
+  templateUrl: './dataset-preview.html'
 })
 export class DatasetPreview implements OnInit {
   @Input() datasetId!: number;

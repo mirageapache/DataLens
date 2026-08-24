@@ -12,6 +12,21 @@
     </div>
   }
 
+  @if (error) {
+    <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start space-x-4">
+      <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0 text-lg">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <div class="flex-1">
+        <p class="font-semibold text-red-800">載入失敗</p>
+        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+      </div>
+      <button (click)="loadTasks()" class="text-sm text-red-700 hover:text-red-900 font-medium border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition">
+        <i class="fa-solid fa-rotate-right mr-1"></i>重試
+      </button>
+    </div>
+  }
+
   @if (!isLoading && tasks.length > 0) {
     <div class="bg-matSurface border border-matBorder rounded-xl overflow-hidden shadow-sm">
       <table class="w-full text-left text-sm">

@@ -1,16 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ApiService } from '../../../core/services/api';
 import { Dataset } from '../../../core/models/api.models';
 import { DatasetPreview } from '../dataset-preview/dataset-preview';
 
 @Component({
   selector: 'app-datasets-page',
-  imports: [CommonModule, FormsModule, DatasetPreview],
+  imports: [CommonModule, FormsModule, RouterModule, DatasetPreview],
   templateUrl: './datasets-page.html',
-  styleUrl: './datasets-page.css',
 })
 export class DatasetsPage implements OnInit {
   private api = inject(ApiService);
@@ -33,6 +32,7 @@ export class DatasetsPage implements OnInit {
 
   toastMessage: string | null = null;
   toastType: 'success' | 'error' | 'info' = 'success';
+  private toastTimer: any = null;
 
   ngOnInit() {
     this.loadDatasets();
@@ -93,8 +93,8 @@ export class DatasetsPage implements OnInit {
   handleFile(file: File) {
     this.uploadError = null;
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext !== 'csv' && ext !== 'xlsx') {
-      this.uploadError = '僅支援 .csv 或 .xlsx 格式檔案！';
+    if (ext !== 'csv' && ext !== 'xlsx' && ext !== 'xls') {
+      this.uploadError = '僅支援 .csv, .xlsx 或 .xls 格式檔案！';
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -126,8 +126,8 @@ export class DatasetsPage implements OnInit {
     });
   }
 
-  triggerAnalysis(datasetId: number) {
-    this.api.runAnalysis({ dataset_id: datasetId, task_type: 'descriptive' }).subscribe({
+  triggerAnalysis(datasetId: number, taskType: string = 'descriptive_with_correlation') {
+    this.api.runAnalysis({ dataset_id: datasetId, task_type: taskType }).subscribe({
       next: (task) => {
         this.showToast('分析任務已觸發！', 'success');
         this.router.navigate(['/analysis', task.id, 'status']);
@@ -155,7 +155,10 @@ export class DatasetsPage implements OnInit {
   showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
     this.toastMessage = message;
     this.toastType = type;
-    setTimeout(() => {
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+    this.toastTimer = setTimeout(() => {
       this.toastMessage = null;
     }, 4000);
   }

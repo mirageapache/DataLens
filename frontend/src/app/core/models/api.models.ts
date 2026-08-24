@@ -145,3 +145,8 @@ export interface DatasetPreviewResponse {
   /** 資料內容，將欄位名稱映射到值 */
   data: Record<string, any>[];
 }
+
+/**
+ * 任務圖表資料結構 (由各 metric 構成的彈性物件)
+ */
+export type ChartData = Record<string, any>;

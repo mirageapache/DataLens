@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subject, timer, takeUntil, switchMap, catchError, of, filter } from 'rxjs';
+import { Subject, takeUntil, catchError, expand, delay, EMPTY } from 'rxjs';
 import { ApiService } from '../../../core/services/api';
 import { AnalysisTask } from '../../../core/models/api.models';
 
@@ -36,29 +36,35 @@ export class AnalysisStatusPage implements OnInit, OnDestroy {
   }
 
   private startPolling() {
-    // 立即觸發，之後每 2000ms 輪詢一次
-    timer(0, 2000).pipe(
+    let currentDelay = 2000;
+    const maxDelay = 30000;
+
+    this.api.getAnalysisTask(this.taskId).pipe(
+      expand(task => {
+        const status = task.status.toUpperCase();
+        if (status === 'COMPLETED' || status === 'FAILED') {
+          return EMPTY;
+        }
+        const delayTime = currentDelay;
+        currentDelay = Math.min(currentDelay * 2, maxDelay);
+        return this.api.getAnalysisTask(this.taskId).pipe(delay(delayTime));
+      }),
       takeUntil(this.destroy$),
-      switchMap(() => this.api.getAnalysisTask(this.taskId).pipe(
-        catchError(err => {
-          this.error = '無法取得任務狀態，請確認伺服器連線。';
-          return of(null);
-        })
-      )),
-      filter((t): t is AnalysisTask => t !== null)
+      catchError(err => {
+        this.error = '無法取得任務狀態，請確認伺服器連線。';
+        return EMPTY;
+      })
     ).subscribe(task => {
       this.task = task;
       const status = task.status.toUpperCase();
       
       if (status === 'COMPLETED') {
-        // 任務成功，停止輪詢並跳轉到結果頁
-        this.destroy$.next();
+        // 任務成功，停止輪詢並跳轉到結果頁 (expand 會自動結束)
         setTimeout(() => {
           this.router.navigate(['/analysis', this.taskId, 'results']);
         }, 800); // 稍微延遲讓使用者看到成功狀態
       } else if (status === 'FAILED') {
         // 任務失敗，停止輪詢並顯示錯誤
-        this.destroy$.next();
         this.error = task.error_message || '分析任務執行失敗。';
       }
     });

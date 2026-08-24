@@ -59,9 +59,9 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
 
         if task_type == "descriptive":
             results_data = analyzer.descriptive_stats(df, target_columns)
-            # 為了讓前端 Dashboard (Tab 1 & Tab 2) 都有資料，把 correlation 也放進去
-            corr_data = analyzer.correlation_matrix(df, target_columns)
-            results_data.extend(corr_data)
+        elif task_type == "descriptive_with_correlation":
+            # 明確包含相關性分析的組合任務類型，供前端 Dashboard 使用
+            results_data = analyzer.descriptive_with_correlation(df, target_columns)
         elif task_type == "correlation":
             results_data = analyzer.correlation_matrix(df, target_columns)
         elif task_type == "group_by":

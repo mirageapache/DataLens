@@ -6,7 +6,6 @@ import { AnalysisTask } from '../../../core/models/api.models';
 
 @Component({
   selector: 'app-analysis-history-page',
-  standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './analysis-history-page.html'
 })
@@ -18,6 +17,7 @@ export class AnalysisHistoryPage implements OnInit {
   isLoading = false;
   page = 1;
   pageSize = 20;
+  error: string | null = null;
 
   ngOnInit() {
     this.loadTasks();
@@ -25,12 +25,14 @@ export class AnalysisHistoryPage implements OnInit {
 
   loadTasks() {
     this.isLoading = true;
+    this.error = null;
     this.api.getAnalysisTasks(this.page, this.pageSize).subscribe({
       next: (res) => {
         this.tasks = res.items;
         this.isLoading = false;
       },
       error: () => {
+        this.error = '無法載入分析歷史紀錄，請確認伺服器連線後重試。';
         this.isLoading = false;
       }
     });

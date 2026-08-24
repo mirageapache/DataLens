@@ -5,8 +5,7 @@ import { RouterModule, Router } from '@angular/router';
 @Component({
   selector: 'app-main-layout',
   imports: [CommonModule, RouterModule],
-  templateUrl: './main-layout.html',
-  styleUrl: './main-layout.css'
+  templateUrl: './main-layout.html'
 })
 export class MainLayout {
   public router = inject(Router);

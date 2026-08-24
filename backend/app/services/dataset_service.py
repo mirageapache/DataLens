@@ -1,4 +1,5 @@
 import logging
+import functools
 from pathlib import Path
 from uuid import uuid4
 
@@ -14,6 +15,16 @@ from app.schemas.dataset import DatasetListResponse, DatasetPreviewResponse, Dat
 logger = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
+
+
+@functools.lru_cache(maxsize=32)
+def _read_preview_df(saved_path_str: str, limit: int) -> pd.DataFrame:
+    path_obj = Path(saved_path_str)
+    suffix = path_obj.suffix.lower()
+    if suffix == ".csv":
+        return pd.read_csv(path_obj, nrows=limit)
+    else:
+        return pd.read_excel(path_obj, nrows=limit)
 
 
 class DatasetService:
@@ -168,10 +179,7 @@ class DatasetService:
 
         suffix = saved_path.suffix.lower()
         try:
-            if suffix == ".csv":
-                df = pd.read_csv(saved_path, nrows=limit)
-            else:
-                df = pd.read_excel(saved_path, nrows=limit)
+            df = _read_preview_df(str(saved_path), limit)
         except Exception as exc:
             logger.error("讀取資料集 %d 檔案失敗：%s", dataset_id, exc)
             raise HTTPException(

@@ -62,7 +62,12 @@
               </td>
               <td class="px-6 py-4 text-gray-500 text-xs">{{dataset.created_at | date:'yyyy-MM-dd HH:mm'}}</td>
               <td class="px-6 py-4 text-right space-x-2">
-                <button (click)="triggerAnalysis(dataset.id)" [disabled]="dataset.status.toUpperCase() !== 'READY'" [class.opacity-50]="dataset.status.toUpperCase() !== 'READY'" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-2 py-1 rounded hover:bg-indigo-50 transition">
+                <select #taskTypeSelect class="text-xs border border-matBorder rounded px-2 py-1 bg-white mr-2 focus:outline-none focus:border-matPrimary" [disabled]="dataset.status.toUpperCase() !== 'READY'">
+                  <option value="descriptive_with_correlation">綜合分析</option>
+                  <option value="descriptive">純描述性統計</option>
+                  <option value="correlation">相關性熱力圖</option>
+                </select>
+                <button (click)="triggerAnalysis(dataset.id, taskTypeSelect.value)" [disabled]="dataset.status.toUpperCase() !== 'READY'" [class.opacity-50]="dataset.status.toUpperCase() !== 'READY'" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-2 py-1 rounded hover:bg-indigo-50 transition">
                   分析
                 </button>
                 <button (click)="deleteDataset(dataset.id)" class="text-red-500 hover:text-red-700 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 transition">
@@ -140,14 +145,14 @@
            [ngClass]="{'border-matPrimary bg-indigo-50': isDragging, 'border-gray-300 bg-gray-50/50 hover:border-matPrimary hover:bg-indigo-50/30': !isDragging}"
            class="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center group">
         
-        <input type="file" #fileInput accept=".csv, .xlsx" class="hidden" (change)="onFileSelected($event)">
+        <input type="file" #fileInput accept=".csv, .xlsx, .xls" class="hidden" (change)="onFileSelected($event)">
         
         <div class="w-14 h-14 bg-indigo-50 text-matPrimary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
           <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
         </div>
         
         <p class="text-sm font-semibold text-gray-700">拖放檔案至此處，或 <span class="text-matPrimary hover:underline">點擊瀏覽</span></p>
-        <p class="text-xs text-gray-400 mt-1">支援格式：.CSV, .XLSX（單檔上限 50 MB）</p>
+        <p class="text-xs text-gray-400 mt-1">支援格式：.CSV, .XLSX, .XLS（單檔上限 50 MB）</p>
       </div>
 
       <!-- Selected File Status & Error Panel -->

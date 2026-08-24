@@ -17,7 +17,22 @@
     </div>
   }
 
-  @if (!isLoading && task) {
+  @if (error) {
+    <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start space-x-4">
+      <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0 text-lg">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <div class="flex-1">
+        <p class="font-semibold text-red-800">載入失敗</p>
+        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+      </div>
+      <button (click)="loadData()" class="text-sm text-red-700 hover:text-red-900 font-medium border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition">
+        <i class="fa-solid fa-rotate-right mr-1"></i>重試
+      </button>
+    </div>
+  }
+
+  @if (!isLoading && !error && task) {
     <!-- Task Overview Banner -->
     <div class="bg-matSurface rounded-xl border border-matBorder shadow-sm p-5 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center space-x-4">
@@ -103,7 +118,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="border border-matBorder rounded-xl p-4 bg-gray-50/50 space-y-3">
                 <div class="flex items-center justify-between">
-                  <h3 class="text-sm font-bold text-gray-800">數值分佈模擬 (常態分佈曲線)</h3>
+                <h3 class="text-sm font-bold text-gray-800">數值分佈直方圖</h3>
                   <div class="flex items-center space-x-2">
                     <select (change)="onHistColChange($event)" class="text-xs bg-white border border-matBorder px-2.5 py-1 rounded focus:outline-none focus:border-matPrimary">
                       @for (col of histogramColumns; track col) {
