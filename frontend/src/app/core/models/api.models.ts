@@ -135,3 +135,13 @@ export interface TaskExecutionTrend {
   /** 任務執行耗時 (毫秒) */
   duration_ms: number;
 }
+
+/**
+ * 資料集預覽的回傳模型
+ */
+export interface DatasetPreviewResponse {
+  /** 欄位名稱列表 */
+  columns: string[];
+  /** 資料內容，將欄位名稱映射到值 */
+  data: Record<string, any>[];
+}

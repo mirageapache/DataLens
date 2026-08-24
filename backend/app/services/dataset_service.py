@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.models.dataset import Dataset, DatasetColumn
 from app.repositories.dataset_repository import DatasetRepository
-from app.schemas.dataset import DatasetListResponse, DatasetRead, DatasetUpdate
+from app.schemas.dataset import DatasetListResponse, DatasetRead, DatasetUpdate, DatasetPreviewResponse
 
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50 MB
 
@@ -124,4 +124,36 @@ class DatasetService:
             saved_path.unlink(missing_ok=True)
         except OSError:
             pass  # 檔案刪除失敗不阻斷流程，殘留檔案可稍後清理
-        self.repo.delete(dataset)
+        try:
+            self.repo.delete(dataset)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"刪除失敗，可能有其他資料關聯：{str(e)}"
+            )
+
+    # 取得資料集預覽資料
+    def get_dataset_preview(self, dataset_id: int, limit: int = 100) -> DatasetPreviewResponse:
+        dataset = self.repo.get(dataset_id)
+        if not dataset:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found")
+
+        saved_path = self.upload_root / dataset.file_path
+        if not saved_path.exists():
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Dataset file not found on disk")
+
+        suffix = saved_path.suffix.lower()
+        try:
+            if suffix == ".csv":
+                df = pd.read_csv(saved_path, nrows=limit)
+            else:
+                df = pd.read_excel(saved_path, nrows=limit)
+        except Exception as exc:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to read file: {exc}")
+
+        # Replace NaN with None so it's valid JSON for the frontend
+        df = df.where(pd.notnull(df), None)
+        columns = df.columns.astype(str).tolist()
+        data = df.to_dict(orient="records")
+
+        return DatasetPreviewResponse(columns=columns, data=data)

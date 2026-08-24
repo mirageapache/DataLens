@@ -47,3 +47,10 @@ class DatasetUpdate(BaseModel):
 
     status: str | None = None
     filename: str | None = None
+
+
+class DatasetPreviewResponse(BaseModel):
+    """資料集資料預覽的回傳模型。"""
+
+    columns: list[str]
+    data: list[dict]

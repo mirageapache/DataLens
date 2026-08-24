@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services/api';
 import { Dataset } from '../../../core/models/api.models';
+import { DatasetPreview } from '../dataset-preview/dataset-preview';
 
 @Component({
   selector: 'app-datasets-page',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DatasetPreview],
   templateUrl: './datasets-page.html',
   styleUrl: './datasets-page.css',
 })
@@ -20,6 +21,9 @@ export class DatasetsPage implements OnInit {
   page = 1;
   pageSize = 10;
   isLoading = false;
+
+  selectedDatasetId: number | null = null;
+  selectedDatasetName: string = '';
 
   isUploadModalOpen = false;
   isDragging = false;
@@ -154,5 +158,19 @@ export class DatasetsPage implements OnInit {
     setTimeout(() => {
       this.toastMessage = null;
     }, 4000);
+  }
+
+  viewDataset(dataset: Dataset) {
+    if (dataset.status.toUpperCase() !== 'READY') {
+      this.showToast('資料集尚未處理完成，無法預覽', 'info');
+      return;
+    }
+    this.selectedDatasetId = dataset.id;
+    this.selectedDatasetName = dataset.filename;
+  }
+
+  closePreview() {
+    this.selectedDatasetId = null;
+    this.selectedDatasetName = '';
   }
 }

@@ -10,7 +10,8 @@ import {
   AnalysisTask,
   AnalysisTaskListResponse,
   AnalysisResultSummary,
-  TaskExecutionTrend
+  TaskExecutionTrend,
+  DatasetPreviewResponse
 } from '../models/api.models';
 
 @Injectable({
@@ -58,6 +59,16 @@ export class ApiService {
    */
   deleteDataset(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/datasets/${id}`);
+  }
+
+  /**
+   * 取得資料集預覽內容 (前 N 筆資料)
+   * @param id 資料集 ID
+   * @param limit 回傳筆數 (預設 100)
+   */
+  getDatasetPreview(id: number, limit: number = 100): Observable<DatasetPreviewResponse> {
+    const params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<DatasetPreviewResponse>(`${this.apiUrl}/datasets/${id}/preview`, { params });
   }
 
   // --- Analysis API ---

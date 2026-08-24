@@ -1,24 +1,26 @@
 <div class="max-w-6xl mx-auto space-y-6">
         
-  <!-- Header Zone -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-800">資料集列表</h1>
-      <p class="text-sm text-matTextSecondary mt-1">檢視與管理所有已匯入的結構化 CSV/Excel 資料集</p>
+  <!-- List View -->
+  @if (!selectedDatasetId) {
+    <!-- Header Zone -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800">資料集列表</h1>
+        <p class="text-sm text-matTextSecondary mt-1">檢視與管理所有已匯入的結構化 CSV/Excel 資料集</p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button (click)="openUploadDialog()" class="bg-matPrimary hover:bg-matPrimaryHover text-white font-medium px-4 py-2 rounded mat-elevation-1 flex items-center space-x-2 text-sm transition">
+          <i class="fa-solid fa-plus"></i>
+          <span>新增資料集</span>
+        </button>
+      </div>
     </div>
-    <div class="flex items-center space-x-3">
-      <button (click)="openUploadDialog()" class="bg-matPrimary hover:bg-matPrimaryHover text-white font-medium px-4 py-2 rounded mat-elevation-1 flex items-center space-x-2 text-sm transition">
-        <i class="fa-solid fa-plus"></i>
-        <span>新增資料集</span>
-      </button>
-    </div>
-  </div>
 
-  @if (isLoading && datasets.length === 0) {
-    <div class="flex justify-center p-12">
-      <i class="fa-solid fa-spinner fa-spin text-4xl text-matPrimary"></i>
-    </div>
-  }
+    @if (isLoading && datasets.length === 0) {
+      <div class="flex justify-center p-12">
+        <i class="fa-solid fa-spinner fa-spin text-4xl text-matPrimary"></i>
+      </div>
+    }
 
   <!-- Data Table Container -->
   @if (!isLoading && datasets.length > 0) {
@@ -37,9 +39,9 @@
         <tbody class="divide-y divide-matBorder">
           @for (dataset of datasets; track dataset.id) {
             <tr class="hover:bg-gray-50 transition" [ngClass]="{'bg-amber-50/30': dataset.status.toUpperCase() !== 'READY'}">
-              <td class="px-6 py-4 font-medium text-gray-900 flex items-center space-x-3">
-                <i class="fa-regular text-lg" [ngClass]="dataset.filename.endsWith('.csv') ? 'fa-file-lines text-blue-600' : 'fa-file-excel text-emerald-600'"></i>
-                <span>{{dataset.filename}}</span>
+              <td class="px-6 py-4 font-medium text-gray-900 flex items-center space-x-3 cursor-pointer group" (click)="viewDataset(dataset)">
+                <i class="fa-regular text-lg group-hover:scale-110 transition-transform" [ngClass]="dataset.filename.endsWith('.csv') ? 'fa-file-lines text-blue-600' : 'fa-file-excel text-emerald-600'"></i>
+                <span class="group-hover:text-matPrimary transition-colors">{{dataset.filename}}</span>
               </td>
               <td class="px-6 py-4 text-gray-600">{{dataset.row_count | number}}</td>
               <td class="px-6 py-4 text-gray-600">{{dataset.column_count}}</td>
@@ -102,6 +104,15 @@
         <span>上傳第一份資料集</span>
       </button>
     </div>
+  }
+  } <!-- End of List View -->
+
+  @if (selectedDatasetId) {
+    <app-dataset-preview 
+      [datasetId]="selectedDatasetId" 
+      [datasetName]="selectedDatasetName"
+      (back)="closePreview()">
+    </app-dataset-preview>
   }
 
 </div>

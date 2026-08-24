@@ -23,6 +23,7 @@ npm-debug.log*
 uploads/
 *.log
 logs/
+test_data/
 
 # === OS / IDE ===
 .DS_Store
