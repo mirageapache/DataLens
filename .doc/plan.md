@@ -4,9 +4,9 @@
 
 | 項目 | 內容 |
 |------|------|
-| 版本 | v1.0 |
-| 建立日期 | 2026 年 5 月 |
-| 預計開發期 | 8 ～ 10 週 |
+| 版本 | v2.0 |
+| 更新日期 | 2026/08/26 |
+| 預計開發期 | 10 ～ 12 週 |
 
 ---
 
@@ -31,7 +31,8 @@
 **核心功能概念：**
 
 - 支援任意結構化資料匯入（CSV、Excel）
-- 自動執行描述性統計、相關性分析、分組聚合
+- 自動執行描述性統計、相關性分析、分組聚合、異常值檢測與趨勢分析
+- 多元統計圖表動態切換與視覺化呈現（長條圖、折線圖、圓餅圖、箱型圖等）
 - 非同步任務處理大型資料集，前端即時輪詢進度
 - Grafana Dashboard 監控系統健康度與任務狀態
 - Angular 前端提供互動式視覺化 Dashboard
@@ -93,14 +94,17 @@
 - **描述性統計**：mean、median、std、quartile、skewness、kurtosis
 - **相關性分析**：Pearson / Spearman 相關矩陣，Heat Map 輸出
 - **分組聚合**：GROUP BY 任意欄位，支援 SUM / AVG / COUNT / MAX / MIN
-- **時序分析**：若資料含日期欄位，自動產生趨勢折線圖
+- **時序分析**：若資料含日期欄位，自動產生趨勢分析與週期統計
+- **分佈與異常值分析**：五數概括、IQR 計算、Z-score 與離群值 (Outliers) 檢測
+- **類別交叉分析**：樞紐分析表 (Pivot Tables)、交叉次數與比例分佈
 - 分析結果持久化至 PostgreSQL（Supabase），支援歷史紀錄查詢
 
 ### 3.3 模組 C｜視覺化 Dashboard
 
 - Angular 前端 + ngx-echarts 動態渲染
-- 圖表類型：長條圖、折線圖、散佈圖、熱力圖、圓餅圖
-- 支援圖表設定客製化（軸標籤、顏色、資料範圍篩選）
+- **豐富圖表類型**：長條圖 / 堆疊柱狀圖、折線圖 / 面積圖、散佈圖、熱力圖、圓餅圖 / 環形圖、箱型圖 (Boxplot)、雷達圖、雙 Y 軸複合圖
+- **圖表切換器 (Chart Switcher)**：支援在同一維度或數據集下，動態切換不同統計圖表檢視
+- 支援圖表設定客製化（軸標籤、顏色、資料範圍篩選、圖例開關）
 - 分析報告匯出：PDF / CSV 格式下載
 
 ### 3.4 模組 D｜系統監控
@@ -121,7 +125,7 @@
 | GET | `/api/v1/analysis/tasks` | 列出分析任務歷史（可依 `dataset_id` 篩選）|
 | GET | `/api/v1/analysis/tasks/{task_id}` | 查詢非同步任務狀態 |
 | GET | `/api/v1/analysis/tasks/{task_id}/results` | 取得分析結果（含統計數據） |
-| GET | `/api/v1/analysis/tasks/{task_id}/charts` | 取得圖表所需 JSON 資料 |
+| GET | `/api/v1/analysis/tasks/{task_id}/charts` | 取得圖表所需 JSON 資料（含推薦圖表類型） |
 | GET | `/api/v1/health` | 系統健康度檢查 |
 
 > **範圍說明**：本期為作品集專案，不實作認證 / 授權；API 預設運行於受信任的本地 / 內網環境。若日後對外開放，再補 API Key 或 JWT。
@@ -274,21 +278,33 @@ backend/
 
 ---
 
-### Phase 3｜前端開發（第 5 ～ 7 週）
+### Phase 3｜前端基礎與核心流程（第 5 ～ 7 週）
 
 - [✅] 步驟 1：前端專案初始化與 Docker 化環境建置（Angular 21 + TailwindCSS + docker-compose 整合）
 - [✅] 步驟 2：核心佈局 (Layout) 與路由 (Routing) 建立（切分共用 Header / Navbar）
 - [✅] 步驟 3：後端 API 服務串接 (Service Layer 實作)
 - [✅] 步驟 4：實作資料上傳與列表頁（支援單檔 50 MB 限制與拖曳上傳）
 - [✅] 步驟 5：實作分析任務狀態與輪詢頁面（RxJS 輪詢機制）
-- [✅] 步驟 6：實作圖表與結果頁面（整合 ngx-echarts 渲染至少三種圖表）
+- [✅] 步驟 6：實作圖表與結果頁面（整合 ngx-echarts 渲染基礎圖表）
 - [ ] 步驟 7：加入結構化 Log Middleware 至 FastAPI，並寫入 `system_logs` 資料庫表
 
-**里程碑 M3**：前端 Dashboard 上線，可完整走完「上傳 → 分析 → 視覺化」
+**里程碑 M3**：前端 Dashboard 上線，可完整走完「上傳 → 分析 → 視覺化」核心 MVP
 
 ---
 
-### Phase 4｜監控、品質提升與收尾（第 8 ～ 10 週）
+### Phase 4｜進階分析引擎與前端動態視覺化擴充（第 8 ～ 9 週）
+
+- [ ] 步驟 1：後端擴充分析模組（分佈與異常值分析 Boxplot、時間序列聚合、類別交叉樞紐分析）
+- [ ] 步驟 2：後端擴充 Chart JSON Schema 與圖表推薦機制（回傳多圖表資料結構與推薦類型）
+- [ ] 步驟 3：前端實作「圖表切換器 (Chart Switcher)」元件（支援在長條圖、折線圖、圓餅圖/環形圖、箱型圖等之間自由切換）
+- [ ] 步驟 4：前端強化 ECharts 視覺化體驗（增加箱型圖、環形圖、面積圖、雙 Y 軸複合圖與自訂篩選互動）
+- [ ] 步驟 5：撰寫進階分析與圖表切換模組之 Unit / Integration 測試
+
+**里程碑 M4**：分析引擎全面擴充，前端支援多種進階圖表與自由切換
+
+---
+
+### Phase 5｜監控、品質提升與收尾（第 10 ～ 12 週）
 
 - [ ] 配置 Loki + Promtail，完成 Log 收集管線
 - [ ] 建立 Grafana Dashboard（三個 Panel 群組，Loki + PostgreSQL 雙資料源）
@@ -297,7 +313,7 @@ backend/
 - [ ] 完善 README：架構圖、本地啟動指南、技術決策說明（ADR）
 - [ ] 整理 GitHub commit history，確保功能有對應 Issue 與 PR
 
-**里程碑 M4**：監控上線、測試覆蓋完整，README 齊備
+**里程碑 M5**：監控上線、測試覆蓋完整，README 齊備
 
 ---
 
