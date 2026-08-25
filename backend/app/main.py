@@ -7,6 +7,9 @@ from app.routes.analysis import router as analysis_router
 
 app = FastAPI(title=settings.app_name)
 
+from app.core.middleware import StructuredLogMiddleware
+
+app.add_middleware(StructuredLogMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
