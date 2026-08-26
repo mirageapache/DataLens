@@ -1,8 +1,11 @@
-import pandas as pd
 import logging
+from pathlib import Path
+
+import pandas as pd
 from celery.exceptions import Ignore
 
 from app.core.celery_app import celery_app
+from app.core.config import UPLOAD_ROOT
 from app.core.db import SessionLocal
 from app.repositories.analysis_repository import AnalysisRepository
 from app.repositories.dataset_repository import DatasetRepository
@@ -35,11 +38,17 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
         # 更新任務狀態為已開始
         analysis_repo.update_task_status(task.id, "STARTED")
 
-        # 1. 讀取資料
+        # 1. 讀取資料，並驗證路徑安全性
+        full_file_path = (UPLOAD_ROOT / dataset.file_path).resolve()
+        if not full_file_path.is_relative_to(UPLOAD_ROOT.resolve()):
+            logger.error("任務 %d 偵測到可疑的 Path Traversal：file_path=%s", task_id, dataset.file_path)
+            analysis_repo.update_task_status(task.id, "FAILED")
+            raise Ignore()
+
         if dataset.file_path.endswith('.csv'):
-            df = pd.read_csv(dataset.file_path)
+            df = pd.read_csv(full_file_path)
         elif dataset.file_path.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(dataset.file_path)
+            df = pd.read_excel(full_file_path)
         else:
             raise ValueError("不支援的分析檔案格式。")
 
@@ -50,6 +59,9 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
 
         if task_type == "descriptive":
             results_data = analyzer.descriptive_stats(df, target_columns)
+        elif task_type == "descriptive_with_correlation":
+            # 明確包含相關性分析的組合任務類型，供前端 Dashboard 使用
+            results_data = analyzer.descriptive_with_correlation(df, target_columns)
         elif task_type == "correlation":
             results_data = analyzer.correlation_matrix(df, target_columns)
         elif task_type == "group_by":

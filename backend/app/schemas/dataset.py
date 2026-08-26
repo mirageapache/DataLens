@@ -1,4 +1,5 @@
 import datetime as dt
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -47,3 +48,10 @@ class DatasetUpdate(BaseModel):
 
     status: str | None = None
     filename: str | None = None
+
+
+class DatasetPreviewResponse(BaseModel):
+    """資料集資料預覽的回傳模型。"""
+
+    columns: list[str]
+    data: list[dict[str, Any]]  # Any 允許 NaN->None 轉換後的混合型別值

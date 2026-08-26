@@ -1,0 +1,75 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  
+  <!-- Breadcrumb -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <a routerLink="/datasets" class="text-gray-500 hover:text-matPrimary flex items-center space-x-1 text-sm transition">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>返回資料集列表</span>
+      </a>
+      <span class="text-gray-300">/</span>
+      <span class="text-xs font-mono bg-gray-200 text-gray-700 px-2 py-0.5 rounded">Task ID: {{ taskId }}</span>
+    </div>
+  </div>
+
+  <!-- Main Status Card -->
+  <div class="bg-matSurface rounded-xl border border-matBorder shadow-sm p-12 text-center space-y-6 mt-8">
+    
+    @if (error) {
+      <!-- Error State -->
+      <div class="max-w-md mx-auto space-y-4">
+        <div class="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto text-3xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-800">分析任務執行失敗</h3>
+          <p class="text-sm text-red-600 mt-2 bg-red-50 p-3 rounded text-left border border-red-100">
+            {{ error }}
+          </p>
+        </div>
+        <div class="pt-6">
+          <button routerLink="/datasets" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-6 py-2 rounded-lg transition shadow-sm">
+            回到列表
+          </button>
+        </div>
+      </div>
+    } @else if (task?.status?.toUpperCase() === 'COMPLETED') {
+      <!-- Success State -->
+      <div class="max-w-md mx-auto space-y-4">
+        <div class="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl">
+          <i class="fa-solid fa-check"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-800">分析完成！</h3>
+          <p class="text-xs text-matTextSecondary mt-2">資料處理完畢，正在為您跳轉至分析結果報表...</p>
+        </div>
+      </div>
+    } @else {
+      <!-- Loading / Polling State -->
+      <div class="max-w-md mx-auto space-y-5">
+        <div class="w-16 h-16 bg-indigo-50 text-matPrimary rounded-full flex items-center justify-center mx-auto text-2xl animate-spin">
+          <i class="fa-solid fa-circle-notch"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-800">非同步分析任務處理中...</h3>
+          <p class="text-xs text-matTextSecondary mt-2">
+            Celery 背景 Worker 正在為 
+            <span class="font-semibold text-gray-700">Dataset #{{ task?.dataset_id || '...' }}</span> 計算統計分析矩陣
+          </p>
+        </div>
+
+        <!-- Material Progress Bar -->
+        <div class="w-full bg-indigo-100 h-1.5 rounded-full overflow-hidden mt-4">
+          <!-- TODO: if we had a percentage, we could map it. For now, pulse. -->
+          <div class="bg-matPrimary h-full animate-pulse w-2/3 rounded-full"></div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-gray-400 font-mono mt-4">
+          <span class="bg-gray-100 px-2 py-1 rounded">Status: {{ task?.status || 'CONNECTING...' }}</span>
+          <span>Polling interval: 2s</span>
+        </div>
+      </div>
+    }
+    
+  </div>
+</div>

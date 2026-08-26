@@ -47,6 +47,17 @@ services:
       - postgres
       - redis
 
+  frontend:
+    build: ./frontend
+    command: npm run start -- --host 0.0.0.0 --poll 2000
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - fastapi-app
+
 volumes:
   uploads:
   pgdata:

@@ -1,0 +1,89 @@
+<div class="max-w-6xl mx-auto space-y-6 pt-4">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold text-gray-800 flex items-center space-x-2">
+      <i class="fa-solid fa-chart-column text-matPrimary"></i>
+      <span>分析歷史紀錄</span>
+    </h2>
+  </div>
+
+  @if (isLoading && tasks.length === 0) {
+    <div class="flex justify-center p-12">
+      <i class="fa-solid fa-spinner fa-spin text-4xl text-matPrimary"></i>
+    </div>
+  }
+
+  @if (error) {
+    <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start space-x-4">
+      <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0 text-lg">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <div class="flex-1">
+        <p class="font-semibold text-red-800">載入失敗</p>
+        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+      </div>
+      <button (click)="loadTasks()" class="text-sm text-red-700 hover:text-red-900 font-medium border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition">
+        <i class="fa-solid fa-rotate-right mr-1"></i>重試
+      </button>
+    </div>
+  }
+
+  @if (!isLoading && tasks.length > 0) {
+    <div class="bg-matSurface border border-matBorder rounded-xl overflow-hidden shadow-sm">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-gray-50 border-b border-matBorder text-gray-500 font-semibold uppercase text-xs">
+          <tr>
+            <th class="px-6 py-4 w-1/4">Task ID</th>
+            <th class="px-6 py-4">資料集 ID</th>
+            <th class="px-6 py-4">類型</th>
+            <th class="px-6 py-4">狀態</th>
+            <th class="px-6 py-4">建立時間</th>
+            <th class="px-6 py-4 text-right">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-matBorder">
+          @for (task of tasks; track task.id) {
+            <tr class="hover:bg-gray-50 transition cursor-pointer" (click)="goToDashboard(task.id)">
+              <td class="px-6 py-4 font-mono text-gray-900 text-xs">task_{{ task.id }}</td>
+              <td class="px-6 py-4 text-gray-600">Dataset #{{ task.dataset_id }}</td>
+              <td class="px-6 py-4 text-gray-600 uppercase">{{ task.task_type }}</td>
+              <td class="px-6 py-4">
+                @if (task.status.toUpperCase() === 'COMPLETED') {
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                    SUCCESS
+                  </span>
+                } @else if (task.status.toUpperCase() === 'FAILED') {
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                    FAILED
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200 animate-pulse">
+                    PROCESSING
+                  </span>
+                }
+              </td>
+              <td class="px-6 py-4 text-gray-500 text-xs">{{ task.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
+              <td class="px-6 py-4 text-right">
+                <button (click)="$event.stopPropagation(); goToDashboard(task.id)" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-3 py-1.5 rounded bg-indigo-50 hover:bg-indigo-100 transition">
+                  檢視報告
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (!isLoading && tasks.length === 0) {
+    <div class="bg-matSurface border border-matBorder rounded-xl p-16 text-center shadow-sm">
+      <div class="w-20 h-20 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto text-4xl mb-4">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-700">目前尚無分析紀錄</h3>
+      <p class="text-gray-500 text-sm mt-2">您的資料分析任務將顯示在這裡。</p>
+      <button routerLink="/datasets" class="mt-6 bg-matPrimary hover:bg-matPrimaryHover text-white px-6 py-2.5 rounded-lg transition">
+        前往資料集建立分析
+      </button>
+    </div>
+  }
+</div>

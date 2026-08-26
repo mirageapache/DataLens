@@ -35,11 +35,11 @@ class PandasAnalyzer(BaseAnalyzer):
 
     def descriptive_stats(self, df: pd.DataFrame, target_columns: list[str] | None = None) -> list[dict[str, Any]]:
         self._check_limit(df)
-        
+
         # Select numeric columns
         if target_columns:
             df = df[target_columns]
-            
+
         numeric_df = df.select_dtypes(include="number")
         if numeric_df.empty:
             return []
@@ -48,16 +48,32 @@ class PandasAnalyzer(BaseAnalyzer):
         stats = numeric_df.describe().T
         stats["skewness"] = numeric_df.skew()
         stats["kurtosis"] = numeric_df.kurt()
-        
+
         results = []
         for col in stats.index:
             col_stats = stats.loc[col].to_dict()
+            # 同時計算真實 histogram bins，讓前端不需使用假常態分佈曲線
+            bins_data = self._compute_histogram_bins(numeric_df[col])
             results.append({
                 "metric_name": f"descriptive_stats_{col}",
-                "chart_data": col_stats
+                "chart_data": {**col_stats, "histogram_bins": bins_data}
             })
-            
+
         return results
+
+    def _compute_histogram_bins(
+        self, series: "pd.Series[Any]", n_bins: int = 20
+    ) -> dict[str, Any]:
+        """將數值序列切分為 n_bins 個區間，回傳各區間中點值與計數，
+        供前端直接繪製真實資料分佈直方圖。"""
+        clean = series.dropna()
+        if clean.empty:
+            return {"labels": [], "counts": []}
+        counts, bin_edges = pd.cut(clean, bins=n_bins, retbins=True)
+        freq = counts.value_counts(sort=False)
+        labels = [f"{edge:.2f}" for edge in bin_edges[:-1]]
+        count_list = freq.values.tolist()
+        return {"labels": labels, "counts": count_list}
 
     def correlation_matrix(self, df: pd.DataFrame, target_columns: list[str] | None = None) -> list[dict[str, Any]]:
         self._check_limit(df)
@@ -81,6 +97,16 @@ class PandasAnalyzer(BaseAnalyzer):
             "metric_name": "pearson_correlation_matrix",
             "chart_data": chart_data
         }]
+
+    def descriptive_with_correlation(
+        self, df: pd.DataFrame, target_columns: list[str] | None = None
+    ) -> list[dict[str, Any]]:
+        """組合方法：同時執行描述性統計與 Pearson 相關係數矩陣。
+        前端 Dashboard 同時需要兩種資料時，應使用 task_type='descriptive_with_correlation'
+        而非讓後端在 descriptive 任務中隱式附加 correlation。"""
+        results = self.descriptive_stats(df, target_columns)
+        results.extend(self.correlation_matrix(df, target_columns))
+        return results
 
     def group_by_aggregation(self, df: pd.DataFrame, group_by_column: str, agg_funcs: list[str]) -> list[dict[str, Any]]:
         self._check_limit(df)

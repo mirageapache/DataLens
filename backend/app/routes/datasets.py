@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.schemas.dataset import DatasetListResponse, DatasetRead, DatasetUpdate
+from app.schemas.dataset import DatasetListResponse, DatasetRead, DatasetUpdate, DatasetPreviewResponse
 from app.services.dataset_service import DatasetService
 
 router = APIRouter(prefix="/api/v1/datasets", tags=["datasets"])
@@ -40,3 +40,13 @@ def update_dataset(dataset_id: int, payload: DatasetUpdate, db: Session = Depend
 def delete_dataset(dataset_id: int, db: Session = Depends(get_db)):
     service = DatasetService(db)
     service.delete_dataset(dataset_id)
+
+# 取得資料集預覽資料
+@router.get("/{dataset_id}/preview", response_model=DatasetPreviewResponse)
+def get_dataset_preview(
+    dataset_id: int, 
+    limit: int = Query(default=100, ge=1, le=1000), 
+    db: Session = Depends(get_db)
+):
+    service = DatasetService(db)
+    return service.get_dataset_preview(dataset_id, limit=limit)
