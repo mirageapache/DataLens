@@ -24,15 +24,29 @@ def setup_database():
     yield
     Base.metadata.drop_all(bind=engine)
 
+from unittest.mock import patch
+
+@pytest.fixture(autouse=True)
+def mock_celery_task():
+    with patch("app.tasks.analysis_tasks.run_analysis_task.delay") as mock_delay:
+        mock_delay.return_value.id = "mock-task-id"
+        yield mock_delay
+
 @pytest.fixture
 def test_csv_file(tmp_path):
     # Create a small CSV file for testing
     csv_path = tmp_path / "test_data.csv"
     with open(csv_path, "w") as f:
-        f.write("id,sales,category\n1,100,A\n2,200,B\n3,150,A")
+        f.write("id,sales,category,date\n1,100,A,2023-01-01\n2,200,B,2023-01-02\n3,150,A,2023-01-03")
     return csv_path
 
-def test_analysis_flow(setup_database, test_csv_file):
+@pytest.mark.parametrize("task_type, payload_extras", [
+    ("descriptive", {"target_columns": ["sales"]}),
+    ("distribution", {"target_columns": ["sales"]}),
+    ("time_series", {"time_column": "date"}),
+    ("cross_tabulation", {"cross_tab_index_column": "category", "cross_tab_columns_column": "id"}),
+])
+def test_analysis_flow(setup_database, test_csv_file, task_type, payload_extras):
     # 1. Upload dataset first
     with open(test_csv_file, "rb") as f:
         upload_resp = client.post("/api/v1/datasets/upload", files={"file": ("test_data.csv", f, "text/csv")})
@@ -43,10 +57,12 @@ def test_analysis_flow(setup_database, test_csv_file):
     # 2. Trigger analysis
     run_req = {
         "dataset_id": dataset_id,
-        "task_type": "descriptive",
-        "target_columns": ["sales"]
+        "task_type": task_type,
+        **payload_extras
     }
     run_resp = client.post("/api/v1/analysis/run", json=run_req)
+    if run_resp.status_code != 200:
+        print("run_resp error:", run_resp.text)
     assert run_resp.status_code == 200
 
     task_data = run_resp.json()
@@ -57,7 +73,7 @@ def test_analysis_flow(setup_database, test_csv_file):
     # We verify the task record was correctly created instead.
     assert task_id > 0
     assert task_data["dataset_id"] == dataset_id
-    assert task_data["task_type"] == "descriptive"
+    assert task_data["task_type"] == task_type
     assert task_data["status"] in ("PENDING", "COMPLETED")  # COMPLETED if Celery is live
 
     # 3. Get task status — should return 200 regardless of completion state
