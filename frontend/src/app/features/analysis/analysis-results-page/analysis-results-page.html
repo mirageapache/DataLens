@@ -49,6 +49,7 @@
           <p class="text-xs text-matTextSecondary mt-1">
             目標資料集：<span class="font-semibold text-gray-700">Dataset #{{ task.dataset_id }}</span>
             • 建立時間：{{ task.created_at | date:'yyyy-MM-dd HH:mm:ss' }}
+            • 任務類型：<span class="font-semibold text-gray-700 uppercase">{{ task.task_type }}</span>
           </p>
         </div>
       </div>
@@ -57,15 +58,15 @@
     <!-- Analysis Results Tabs -->
     <div class="bg-matSurface rounded-xl border border-matBorder shadow-sm overflow-hidden">
       <!-- Tab Headers -->
-      <div class="flex border-b border-matBorder bg-gray-50/50 px-4 text-sm font-medium text-gray-600">
-        <button (click)="activeTab = 'descriptive'" [ngClass]="{'border-b-2 border-matPrimary text-matPrimary font-bold': activeTab === 'descriptive'}" class="px-5 py-3.5 flex items-center space-x-2 transition">
-          <i class="fa-solid fa-calculator"></i>
-          <span>描述性統計與分佈</span>
-        </button>
-        <button (click)="activeTab = 'correlation'" [ngClass]="{'border-b-2 border-matPrimary text-matPrimary font-bold': activeTab === 'correlation'}" class="px-5 py-3.5 hover:text-matPrimary flex items-center space-x-2 transition">
-          <i class="fa-solid fa-border-all"></i>
-          <span>相關性熱力圖</span>
-        </button>
+      <div class="flex border-b border-matBorder bg-gray-50/50 px-4 text-sm font-medium text-gray-600 overflow-x-auto">
+        @for (tab of availableTabs; track tab.id) {
+          <button (click)="activeTab = tab.id" 
+                  [ngClass]="{'border-b-2 border-matPrimary text-matPrimary font-bold': activeTab === tab.id}" 
+                  class="px-5 py-3.5 flex items-center space-x-2 transition hover:text-matPrimary whitespace-nowrap">
+            <i class="fa-solid" [ngClass]="tab.icon"></i>
+            <span>{{ tab.label }}</span>
+          </button>
+        }
       </div>
 
       <!-- Tab Content Area -->
@@ -173,6 +174,39 @@
               } @else {
                 <div class="w-full h-32 flex items-center justify-center text-gray-400 text-sm">
                   無相關性矩陣資料
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Tab: Generic (group_by, time_series, cross_tabulation, distribution) -->
+        @if (activeTab === 'group_by' || activeTab === 'time_series' || activeTab === 'cross_tabulation' || activeTab === 'distribution') {
+          <div class="space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 class="text-sm font-bold text-gray-800">進階分析結果</h3>
+                <p class="text-xs text-matTextSecondary mt-0.5">系統自動推薦最適合的視覺化圖表</p>
+              </div>
+              
+              @if (genericAvailableCharts.length > 0) {
+                <!-- Chart Switcher Component -->
+                <app-chart-switcher 
+                  [availableCharts]="genericAvailableCharts" 
+                  [activeChart]="genericActiveChart" 
+                  (chartTypeChange)="onGenericChartChange($event)">
+                </app-chart-switcher>
+              }
+            </div>
+
+            <!-- ECharts Canvas Container -->
+            <div class="border border-matBorder rounded-xl p-4 bg-gray-50/50 overflow-x-auto min-h-[400px]">
+              @if (genericChartOptions) {
+                <div echarts [options]="genericChartOptions" class="w-full h-96"></div>
+              } @else {
+                <div class="w-full h-96 flex flex-col items-center justify-center text-gray-400 text-sm space-y-2">
+                  <i class="fa-solid fa-chart-line text-3xl opacity-50"></i>
+                  <span>此資料集尚未產出對應圖表，或不支援所選的圖表類型</span>
                 </div>
               }
             </div>

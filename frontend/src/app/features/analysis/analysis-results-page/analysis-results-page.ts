@@ -2,13 +2,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { ApiService } from '../../../core/services/api';
-import { AnalysisTask, AnalysisResultSummary } from '../../../core/models/api.models';
+import { AnalysisTask, AnalysisResultSummary, ChartData } from '../../../core/models/api.models';
 import { NgxEchartsModule } from 'ngx-echarts';
 import { forkJoin } from 'rxjs';
+import { ChartSwitcherComponent } from '../components/chart-switcher/chart-switcher.component';
 
 @Component({
   selector: 'app-analysis-results-page',
-  imports: [CommonModule, RouterModule, NgxEchartsModule],
+  standalone: true,
+  imports: [CommonModule, RouterModule, NgxEchartsModule, ChartSwitcherComponent],
   templateUrl: './analysis-results-page.html'
 })
 export class AnalysisResultsPage implements OnInit {
@@ -19,16 +21,24 @@ export class AnalysisResultsPage implements OnInit {
   taskId!: number;
   task: AnalysisTask | null = null;
   results: AnalysisResultSummary[] = [];
-  chartsData: any = null;
+  chartsData: ChartData = {};
   isLoading = true;
   error: string | null = null;
 
-  activeTab: 'descriptive' | 'correlation' = 'descriptive';
+  activeTab: string = '';
+  availableTabs: { id: string, label: string, icon: string }[] = [];
 
   // --- ECharts Options ---
   histogramOptions: any;
   heatmapOptions: any;
   boxplotOptions: any;
+  
+  // Generic charts (for group_by, time_series, cross_tabulation, distribution)
+  genericChartOptions: any = null;
+  genericAvailableCharts: string[] = [];
+  genericActiveChart: string = '';
+  genericMetricName: string = '';
+  genericRawData: any = null;
 
   // Selected column for histogram
   histogramColumns: string[] = [];
@@ -68,19 +78,55 @@ export class AnalysisResultsPage implements OnInit {
       }
     });
   }
+  
+  setupTabs() {
+    this.availableTabs = [];
+    if (!this.task) return;
+    
+    switch (this.task.task_type) {
+      case 'descriptive':
+        this.availableTabs.push({ id: 'descriptive', label: '描述性統計與分佈', icon: 'fa-calculator' });
+        break;
+      case 'correlation':
+        this.availableTabs.push({ id: 'correlation', label: '相關性分析', icon: 'fa-border-all' });
+        break;
+      case 'descriptive_with_correlation':
+        this.availableTabs.push({ id: 'descriptive', label: '描述性統計與分佈', icon: 'fa-calculator' });
+        this.availableTabs.push({ id: 'correlation', label: '相關性分析', icon: 'fa-border-all' });
+        break;
+      case 'group_by':
+        this.availableTabs.push({ id: 'group_by', label: '分組聚合分析', icon: 'fa-layer-group' });
+        break;
+      case 'time_series':
+        this.availableTabs.push({ id: 'time_series', label: '時間序列趨勢', icon: 'fa-chart-line' });
+        break;
+      case 'distribution':
+        this.availableTabs.push({ id: 'distribution', label: '分佈與異常值分析', icon: 'fa-boxes-stacked' });
+        break;
+      case 'cross_tabulation':
+        this.availableTabs.push({ id: 'cross_tabulation', label: '類別交叉樞紐分析', icon: 'fa-table' });
+        break;
+    }
+    
+    if (this.availableTabs.length > 0) {
+      this.activeTab = this.availableTabs[0].id;
+    }
+  }
 
   processData() {
-    // 1. Process Descriptive Stats (for Table and Histogram)
+    this.setupTabs();
+
+    // 1. Process Descriptive Stats
     const statsCols = [];
     this.statsTable = [];
     
-    for (const [metric, data] of Object.entries(this.chartsData)) {
+    for (const [metric, res] of Object.entries(this.chartsData)) {
       if (metric.startsWith('descriptive_stats_')) {
         const colName = metric.replace('descriptive_stats_', '');
         statsCols.push(colName);
         this.statsTable.push({
           colName,
-          ...((data as any) || {})
+          ...(res.chart_data || {})
         });
       }
     }
@@ -94,13 +140,170 @@ export class AnalysisResultsPage implements OnInit {
 
     // 2. Process Correlation Heatmap
     if (this.chartsData['pearson_correlation_matrix']) {
-      const corrData = this.chartsData['pearson_correlation_matrix'];
-      this.renderHeatmap(corrData);
+      const res = this.chartsData['pearson_correlation_matrix'];
+      this.renderHeatmap(res.chart_data);
+    }
+    
+    // 3. Process Generic Charts (group_by, time_series, cross_tabulation, distribution)
+    this.processGenericCharts();
+  }
+  
+  processGenericCharts() {
+    if (!this.task) return;
+    
+    // Find the first metric that matches the task type pattern
+    let targetMetric = '';
+    for (const metric of Object.keys(this.chartsData)) {
+      if (this.task.task_type === 'group_by' && metric.startsWith('group_by_')) targetMetric = metric;
+      else if (this.task.task_type === 'time_series' && metric.startsWith('time_series_trend_')) targetMetric = metric;
+      else if (this.task.task_type === 'cross_tabulation' && metric.startsWith('cross_tab_')) targetMetric = metric;
+      else if (this.task.task_type === 'distribution' && metric.startsWith('distribution_boxplot_')) {
+        // Just pick the first one for simplicity, or we can add a dropdown like descriptive
+        targetMetric = metric;
+        break;
+      }
+    }
+    
+    if (targetMetric && this.chartsData[targetMetric]) {
+      this.genericMetricName = targetMetric;
+      this.genericRawData = this.chartsData[targetMetric].chart_data;
+      this.genericAvailableCharts = this.chartsData[targetMetric].recommended_charts || ['bar'];
+      
+      if (this.genericAvailableCharts.length > 0) {
+        this.onGenericChartChange(this.genericAvailableCharts[0]);
+      }
+    }
+  }
+
+  onGenericChartChange(chartType: string) {
+    this.genericActiveChart = chartType;
+    if (!this.genericRawData) return;
+    
+    const data = this.genericRawData;
+    
+    if (chartType === 'bar' || chartType === 'stacked_bar') {
+      const seriesNames = data.series_names || Object.keys(data.series);
+      const isStacked = chartType === 'stacked_bar';
+      
+      this.genericChartOptions = {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        legend: { data: seriesNames, bottom: 0 },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', data: data.categories || data.time_labels, axisLabel: { rotate: 30 } },
+        yAxis: { type: 'value' },
+        series: seriesNames.map((name: string) => ({
+          name,
+          type: 'bar',
+          stack: isStacked ? 'total' : undefined,
+          data: data.series[name]
+        }))
+      };
+    } 
+    else if (chartType === 'line' || chartType === 'area') {
+      const seriesNames = data.series_names || Object.keys(data.series);
+      const isArea = chartType === 'area';
+      
+      this.genericChartOptions = {
+        tooltip: { trigger: 'axis' },
+        legend: { data: seriesNames, bottom: 0 },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        xAxis: { type: 'category', boundaryGap: false, data: data.time_labels || data.categories },
+        yAxis: { type: 'value' },
+        series: seriesNames.map((name: string) => ({
+          name,
+          type: 'line',
+          areaStyle: isArea ? {} : undefined,
+          smooth: true,
+          data: data.series[name]
+        }))
+      };
+    }
+    else if (chartType === 'pie' || chartType === 'donut') {
+      const seriesNames = Object.keys(data.series);
+      if (seriesNames.length === 0) return;
+      
+      // Pie chart usually only plots one data series against categories
+      const targetSeries = seriesNames[0];
+      const pieData = (data.categories || []).map((cat: string, index: number) => ({
+        name: cat,
+        value: data.series[targetSeries][index]
+      }));
+      
+      const isDonut = chartType === 'donut';
+      
+      this.genericChartOptions = {
+        tooltip: { trigger: 'item', formatter: '{a} <br/>{b} : {c} ({d}%)' },
+        legend: { type: 'scroll', orient: 'vertical', right: 10, top: 20, bottom: 20 },
+        series: [
+          {
+            name: targetSeries,
+            type: 'pie',
+            radius: isDonut ? ['40%', '70%'] : '50%',
+            center: ['40%', '50%'],
+            data: pieData,
+            emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
+          }
+        ]
+      };
+    }
+    else if (chartType === 'boxplot') {
+      // Assuming distribution format
+      const boxData = [[
+        data.min, data.q1, data.median, data.q3, data.max
+      ]];
+      this.genericChartOptions = {
+        title: { text: this.genericMetricName, left: 'center' },
+        tooltip: { trigger: 'item', axisPointer: { type: 'shadow' } },
+        grid: { left: '10%', right: '10%', bottom: '15%' },
+        xAxis: { type: 'category', data: ['Data'], boundaryGap: true, splitArea: { show: false } },
+        yAxis: { type: 'value', splitArea: { show: true } },
+        series: [
+          {
+            name: 'Boxplot',
+            type: 'boxplot',
+            data: boxData,
+            itemStyle: { color: '#eef2ff', borderColor: '#4f46e5' }
+          }
+        ]
+      };
+    }
+    else if (chartType === 'heatmap') {
+      // Similar to correlation rendering
+      if (data.categories && data.series_names) {
+         const yAxis = data.categories;
+         const xAxis = data.series_names;
+         const heatmapPoints = [];
+         let min = 0, max = 0;
+         
+         for (let i = 0; i < xAxis.length; i++) {
+            const colData = data.series[xAxis[i]];
+            for (let j = 0; j < yAxis.length; j++) {
+               const val = colData[j] || 0;
+               heatmapPoints.push([i, j, val]);
+               if (val < min) min = val;
+               if (val > max) max = val;
+            }
+         }
+         
+         this.genericChartOptions = {
+          tooltip: { position: 'top' },
+          grid: { top: '10%', bottom: '15%', left: '15%', right: '10%' },
+          xAxis: { type: 'category', data: xAxis, splitArea: { show: true } },
+          yAxis: { type: 'category', data: yAxis, splitArea: { show: true } },
+          visualMap: {
+            min: min, max: max, calculable: true, orient: 'horizontal', left: 'center', bottom: '0%'
+          },
+          series: [{
+            name: 'Heatmap', type: 'heatmap', data: heatmapPoints,
+            label: { show: true },
+            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0, 0, 0, 0.5)' } }
+          }]
+        };
+      }
     }
   }
 
   renderBoxplot() {
-    // ECharts boxplot data format: [min, Q1, median, Q3, max]
     const boxplotData = [];
     const xAxisData = [];
 
@@ -141,7 +344,6 @@ export class AnalysisResultsPage implements OnInit {
     if (!stat) return;
 
     const bins = stat.histogram_bins;
-    // 後端已回傳真實分桶資料，直接繪製柱狀圖
     if (bins && bins.labels?.length > 0) {
       this.histogramOptions = {
         color: ['#3f51b5'],
@@ -162,7 +364,6 @@ export class AnalysisResultsPage implements OnInit {
         }]
       };
     } else {
-      // Fallback：後端無分桶資料，改顯示無資料提示
       this.histogramOptions = null;
     }
   }
@@ -175,9 +376,8 @@ export class AnalysisResultsPage implements OnInit {
 
   renderHeatmap(corrData: any) {
     const cols = corrData.columns;
-    const values = corrData.values; // 2D array
+    const values = corrData.values; 
 
-    // ECharts heatmap requires data in format [x, y, value]
     const heatmapPoints = [];
     for (let i = 0; i < values.length; i++) {
       for (let j = 0; j < values[i].length; j++) {

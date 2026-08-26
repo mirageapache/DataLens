@@ -147,6 +147,12 @@ export interface DatasetPreviewResponse {
 }
 
 /**
- * 任務圖表資料結構 (由各 metric 構成的彈性物件)
+ * 任務圖表資料結構 (由各 metric 構成的彈性物件，對應後端 4.2 的 ChartDataResponse)
  */
-export type ChartData = Record<string, any>;
+export interface ChartDataResponse {
+  recommended_charts: string[];
+  chart_data: Record<string, any>;
+}
+
+export type ChartData = Record<string, ChartDataResponse>;
+

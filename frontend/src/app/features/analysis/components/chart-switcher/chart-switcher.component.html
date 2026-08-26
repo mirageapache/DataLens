@@ -1,0 +1,16 @@
+<div class="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg w-fit">
+  <ng-container *ngFor="let chart of renderableCharts">
+    <button
+      (click)="onSelectChart(chart.id)"
+      [ngClass]="{
+        'bg-white shadow text-matPrimary font-semibold': activeChart === chart.id,
+        'text-gray-500 hover:text-gray-700 hover:bg-gray-200': activeChart !== chart.id
+      }"
+      class="px-3 py-1.5 rounded-md text-sm transition-all duration-200 flex items-center space-x-1.5 focus:outline-none"
+      [title]="chart.label"
+    >
+      <i class="fa-solid" [ngClass]="chart.icon"></i>
+      <span>{{ chart.label }}</span>
+    </button>
+  </ng-container>
+</div>
