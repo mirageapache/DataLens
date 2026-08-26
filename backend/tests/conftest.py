@@ -5,12 +5,30 @@ from typing import Generator
 import pandas as pd
 import pytest
 from fastapi import UploadFile
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.types import JSON
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.db import Base
 from app.services.dataset_service import DatasetService
+
+
+def _patch_jsonb_for_sqlite(engine):
+    """Override JSONB → JSON for SQLite so JSONB columns compile correctly.
+
+    SQLite does not have a native JSONB type.  This hook replaces the
+    type_compiler behaviour so that `JSONB` is rendered as `JSON` (TEXT-backed)
+    when the schema is created against an in-memory SQLite database.
+    """
+    from sqlalchemy.dialects.sqlite.base import SQLiteTypeCompiler
+
+    if not hasattr(SQLiteTypeCompiler, "_orig_visit_JSONB"):
+        SQLiteTypeCompiler._orig_visit_JSONB = getattr(
+            SQLiteTypeCompiler, "visit_JSONB", None
+        )
+        SQLiteTypeCompiler.visit_JSONB = lambda self, type_, **kw: "JSON"
 
 
 @pytest.fixture
@@ -21,6 +39,8 @@ def db_session() -> Generator[Session, None, None]:
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    # Patch JSONB → JSON so the schema compiles on SQLite
+    _patch_jsonb_for_sqlite(engine)
     Base.metadata.create_all(bind=engine)
     TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
     session = TestingSessionLocal()
@@ -30,6 +50,7 @@ def db_session() -> Generator[Session, None, None]:
         session.close()
         Base.metadata.drop_all(bind=engine)
         engine.dispose()
+
 
 
 @pytest.fixture

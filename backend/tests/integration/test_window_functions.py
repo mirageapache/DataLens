@@ -23,6 +23,15 @@ client = TestClient(app)
 def setup_database():
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
+
+    # Insert placeholder datasets so FK constraints on analysis_tasks are satisfied
+    from app.models.dataset import Dataset
+    datasets = [
+        Dataset(id=1, filename="dummy1.csv", file_path="/tmp/dummy1.csv", row_count=3, column_count=2, status="READY"),
+        Dataset(id=2, filename="dummy2.csv", file_path="/tmp/dummy2.csv", row_count=3, column_count=2, status="READY"),
+    ]
+    db.add_all(datasets)
+    db.flush()
     
     # 建立幾筆假任務來測試 LAG 和 ROW_NUMBER
     # 為了測試時間差，設定不同的 started_at 和 completed_at
@@ -41,6 +50,7 @@ def setup_database():
     
     yield
     Base.metadata.drop_all(bind=engine)
+
 
 
 def test_pagination_row_number(setup_database):

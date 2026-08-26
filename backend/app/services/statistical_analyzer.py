@@ -119,7 +119,10 @@ class PandasAnalyzer(BaseAnalyzer):
         if not valid_funcs:
             valid_funcs = ["count"]
 
-        grouped = df.groupby(group_by_column).agg(valid_funcs)
+        # Only aggregate numeric columns — datetime columns do not support sum/mean etc.
+        numeric_cols = df.select_dtypes(include="number").columns.tolist()
+        agg_df = df[[group_by_column] + numeric_cols]
+        grouped = agg_df.groupby(group_by_column).agg(valid_funcs)
         
         # Format the result so it can be easily plotted as a bar/line chart
         chart_data = {
@@ -159,7 +162,10 @@ class PandasAnalyzer(BaseAnalyzer):
                     except (ValueError, TypeError):
                         continue
             
-            if not datetime_cols or len(datetime_cols) == 0:
+            # Use .empty on the Index object; `if not datetime_cols` is ambiguous for Index
+            if isinstance(datetime_cols, pd.Index) and datetime_cols.empty:
+                return []
+            if not isinstance(datetime_cols, pd.Index) and len(datetime_cols) == 0:
                 return []
                 
             time_col = datetime_cols[0]
