@@ -47,6 +47,30 @@ export class AnalysisResultsPage implements OnInit {
   // Stats table
   statsTable: any[] = [];
 
+  // Common ECharts features (Phase 4.4 enhancements)
+  private getCommonToolbox() {
+    return {
+      feature: {
+        dataZoom: { yAxisIndex: 'none', title: { zoom: '區域縮放', back: '還原縮放' } },
+        dataView: { readOnly: false, title: '資料檢視' },
+        magicType: { type: ['line', 'bar'], title: { line: '切換為折線圖', bar: '切換為長條圖' } },
+        restore: { title: '還原' },
+        saveAsImage: { title: '儲存為圖片' }
+      }
+    };
+  }
+
+  private getCommonDataZoom() {
+    return [
+      { type: 'inside', start: 0, end: 100 },
+      { type: 'slider', bottom: '2%', height: 25 }
+    ];
+  }
+
+  private getCommonTooltip() {
+    return { trigger: 'axis', axisPointer: { type: 'cross', crossStyle: { color: '#999' } } };
+  }
+
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -144,21 +168,19 @@ export class AnalysisResultsPage implements OnInit {
       this.renderHeatmap(res.chart_data);
     }
     
-    // 3. Process Generic Charts (group_by, time_series, cross_tabulation, distribution)
+    // 3. Process Generic Charts
     this.processGenericCharts();
   }
   
   processGenericCharts() {
     if (!this.task) return;
     
-    // Find the first metric that matches the task type pattern
     let targetMetric = '';
     for (const metric of Object.keys(this.chartsData)) {
       if (this.task.task_type === 'group_by' && metric.startsWith('group_by_')) targetMetric = metric;
       else if (this.task.task_type === 'time_series' && metric.startsWith('time_series_trend_')) targetMetric = metric;
       else if (this.task.task_type === 'cross_tabulation' && metric.startsWith('cross_tab_')) targetMetric = metric;
       else if (this.task.task_type === 'distribution' && metric.startsWith('distribution_boxplot_')) {
-        // Just pick the first one for simplicity, or we can add a dropdown like descriptive
         targetMetric = metric;
         break;
       }
@@ -186,16 +208,19 @@ export class AnalysisResultsPage implements OnInit {
       const isStacked = chartType === 'stacked_bar';
       
       this.genericChartOptions = {
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-        legend: { data: seriesNames, bottom: 0 },
-        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        tooltip: this.getCommonTooltip(),
+        toolbox: this.getCommonToolbox(),
+        dataZoom: this.getCommonDataZoom(),
+        legend: { data: seriesNames, top: 0 },
+        grid: { left: '3%', right: '4%', bottom: '15%', top: '15%', containLabel: true },
         xAxis: { type: 'category', data: data.categories || data.time_labels, axisLabel: { rotate: 30 } },
         yAxis: { type: 'value' },
         series: seriesNames.map((name: string) => ({
           name,
           type: 'bar',
           stack: isStacked ? 'total' : undefined,
-          data: data.series[name]
+          data: data.series[name],
+          emphasis: { focus: 'series' }
         }))
       };
     } 
@@ -204,9 +229,11 @@ export class AnalysisResultsPage implements OnInit {
       const isArea = chartType === 'area';
       
       this.genericChartOptions = {
-        tooltip: { trigger: 'axis' },
-        legend: { data: seriesNames, bottom: 0 },
-        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        tooltip: this.getCommonTooltip(),
+        toolbox: this.getCommonToolbox(),
+        dataZoom: this.getCommonDataZoom(),
+        legend: { data: seriesNames, top: 0 },
+        grid: { left: '3%', right: '4%', bottom: '15%', top: '15%', containLabel: true },
         xAxis: { type: 'category', boundaryGap: false, data: data.time_labels || data.categories },
         yAxis: { type: 'value' },
         series: seriesNames.map((name: string) => ({
@@ -214,15 +241,57 @@ export class AnalysisResultsPage implements OnInit {
           type: 'line',
           areaStyle: isArea ? {} : undefined,
           smooth: true,
-          data: data.series[name]
+          data: data.series[name],
+          emphasis: { focus: 'series' }
         }))
+      };
+    }
+    else if (chartType === 'dual_axis') {
+      const seriesNames = data.series_names || Object.keys(data.series);
+      
+      if (seriesNames.length < 2) {
+        // Fallback to line if not enough series
+        this.onGenericChartChange('line');
+        return;
+      }
+      
+      const leftSeries = seriesNames[0];
+      const rightSeries = seriesNames[1];
+      
+      this.genericChartOptions = {
+        tooltip: this.getCommonTooltip(),
+        toolbox: this.getCommonToolbox(),
+        dataZoom: this.getCommonDataZoom(),
+        legend: { data: [leftSeries, rightSeries], top: 0 },
+        grid: { left: '3%', right: '3%', bottom: '15%', top: '15%', containLabel: true },
+        xAxis: { type: 'category', data: data.time_labels || data.categories, axisLabel: { rotate: 30 } },
+        yAxis: [
+          { type: 'value', name: leftSeries, position: 'left' },
+          { type: 'value', name: rightSeries, position: 'right', splitLine: { show: false } }
+        ],
+        series: [
+          {
+            name: leftSeries,
+            type: 'bar',
+            yAxisIndex: 0,
+            data: data.series[leftSeries],
+            emphasis: { focus: 'series' }
+          },
+          {
+            name: rightSeries,
+            type: 'line',
+            yAxisIndex: 1,
+            smooth: true,
+            data: data.series[rightSeries],
+            emphasis: { focus: 'series' }
+          }
+        ]
       };
     }
     else if (chartType === 'pie' || chartType === 'donut') {
       const seriesNames = Object.keys(data.series);
       if (seriesNames.length === 0) return;
       
-      // Pie chart usually only plots one data series against categories
       const targetSeries = seriesNames[0];
       const pieData = (data.categories || []).map((cat: string, index: number) => ({
         name: cat,
@@ -233,6 +302,7 @@ export class AnalysisResultsPage implements OnInit {
       
       this.genericChartOptions = {
         tooltip: { trigger: 'item', formatter: '{a} <br/>{b} : {c} ({d}%)' },
+        toolbox: { feature: { saveAsImage: { title: '儲存為圖片' } } },
         legend: { type: 'scroll', orient: 'vertical', right: 10, top: 20, bottom: 20 },
         series: [
           {
@@ -247,13 +317,13 @@ export class AnalysisResultsPage implements OnInit {
       };
     }
     else if (chartType === 'boxplot') {
-      // Assuming distribution format
       const boxData = [[
         data.min, data.q1, data.median, data.q3, data.max
       ]];
       this.genericChartOptions = {
         title: { text: this.genericMetricName, left: 'center' },
         tooltip: { trigger: 'item', axisPointer: { type: 'shadow' } },
+        toolbox: { feature: { saveAsImage: { title: '儲存為圖片' } } },
         grid: { left: '10%', right: '10%', bottom: '15%' },
         xAxis: { type: 'category', data: ['Data'], boundaryGap: true, splitArea: { show: false } },
         yAxis: { type: 'value', splitArea: { show: true } },
@@ -268,7 +338,6 @@ export class AnalysisResultsPage implements OnInit {
       };
     }
     else if (chartType === 'heatmap') {
-      // Similar to correlation rendering
       if (data.categories && data.series_names) {
          const yAxis = data.categories;
          const xAxis = data.series_names;
@@ -287,6 +356,7 @@ export class AnalysisResultsPage implements OnInit {
          
          this.genericChartOptions = {
           tooltip: { position: 'top' },
+          toolbox: { feature: { saveAsImage: { title: '儲存為圖片' } } },
           grid: { top: '10%', bottom: '15%', left: '15%', right: '10%' },
           xAxis: { type: 'category', data: xAxis, splitArea: { show: true } },
           yAxis: { type: 'category', data: yAxis, splitArea: { show: true } },
@@ -324,7 +394,9 @@ export class AnalysisResultsPage implements OnInit {
       this.boxplotOptions = {
         title: { text: '特徵數值分佈盒鬚圖', left: 'center', textStyle: { fontSize: 14, color: '#374151' } },
         tooltip: { trigger: 'item', axisPointer: { type: 'shadow' } },
-        grid: { left: '10%', right: '10%', bottom: '15%' },
+        toolbox: { feature: { saveAsImage: { title: '儲存為圖片' } } },
+        dataZoom: this.getCommonDataZoom(),
+        grid: { left: '10%', right: '10%', bottom: '20%' },
         xAxis: { type: 'category', data: xAxisData, boundaryGap: true, nameGap: 30, splitArea: { show: false }, splitLine: { show: false } },
         yAxis: { type: 'value', splitArea: { show: true } },
         series: [
@@ -347,8 +419,10 @@ export class AnalysisResultsPage implements OnInit {
     if (bins && bins.labels?.length > 0) {
       this.histogramOptions = {
         color: ['#3f51b5'],
-        tooltip: { trigger: 'axis', formatter: '{b}<br/>Count: {c}' },
-        grid: { top: '10%', bottom: '20%', left: '10%', right: '5%' },
+        tooltip: this.getCommonTooltip(),
+        toolbox: this.getCommonToolbox(),
+        dataZoom: this.getCommonDataZoom(),
+        grid: { top: '15%', bottom: '25%', left: '10%', right: '5%' },
         xAxis: {
           type: 'category',
           data: bins.labels,
@@ -387,6 +461,7 @@ export class AnalysisResultsPage implements OnInit {
 
     this.heatmapOptions = {
       tooltip: { position: 'top' },
+      toolbox: { feature: { saveAsImage: { title: '儲存為圖片' } } },
       grid: { top: '10%', bottom: '25%', left: '15%', right: '10%' },
       xAxis: { type: 'category', data: cols, splitArea: { show: true }, axisLabel: { interval: 0, rotate: 30 } },
       yAxis: { type: 'category', data: cols, splitArea: { show: true } },

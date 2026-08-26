@@ -90,9 +90,10 @@ class AnalysisService:
         if "group_by" in metric:
             return ["bar", "pie", "donut"]
         if "time_series" in metric:
-            return ["line", "area"]
+            return ["line", "area", "dual_axis"]
         if "cross_tab" in metric:
             return ["stacked_bar", "heatmap"]
             
         # 預設回傳
         return ["bar"]
+

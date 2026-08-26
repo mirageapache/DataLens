@@ -30,6 +30,7 @@ export class ChartSwitcherComponent {
     'stacked_bar': { id: 'stacked_bar', label: '堆疊長條圖', icon: 'fa-align-left' },
     'area': { id: 'area', label: '面積圖', icon: 'fa-mountain' },
     'radar': { id: 'radar', label: '雷達圖', icon: 'fa-bullseye' },
+    'dual_axis': { id: 'dual_axis', label: '雙 Y 軸複合圖', icon: 'fa-chart-mixed' },
   };
 
   get renderableCharts(): ChartConfig[] {
