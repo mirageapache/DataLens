@@ -8,7 +8,15 @@ class AnalysisRunRequest(BaseModel):
     """分析請求模型"""
 
     dataset_id: int
-    task_type: Literal["descriptive", "correlation", "descriptive_with_correlation", "group_by", "time_series"]
+    task_type: Literal[
+        "descriptive", 
+        "correlation", 
+        "descriptive_with_correlation", 
+        "group_by", 
+        "time_series",
+        "distribution",
+        "cross_tabulation"
+    ]
     
     # 針對特定分析的額外參數
     target_columns: list[str] | None = Field(
@@ -28,6 +36,12 @@ class AnalysisRunRequest(BaseModel):
     agg_funcs: list[str] | None = Field(
         default=None, description="聚合函式列表，如 ['sum', 'mean', 'count']"
     )
+    
+    # 交叉樞紐分析特有參數
+    cross_tab_index_column: str | None = Field(default=None, description="交叉樞紐分析的列(Index)欄位")
+    cross_tab_columns_column: str | None = Field(default=None, description="交叉樞紐分析的行(Columns)欄位")
+    cross_tab_value_column: str | None = Field(default=None, description="交叉樞紐分析的數值欄位(可選)")
+    cross_tab_agg_func: str | None = Field(default="count", description="交叉樞紐分析的聚合函式")
 
 
 class AnalysisResultSummaryRead(BaseModel):

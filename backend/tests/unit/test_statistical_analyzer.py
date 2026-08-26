@@ -81,3 +81,42 @@ def test_time_series_trend(sample_df):
     assert len(chart_data["time_labels"]) == 5
     assert chart_data["time_labels"][0] == "2023-01-01"
     assert chart_data["series"]["value1"] == [10.0, 20.0, 30.0, 40.0, 50.0]
+
+
+def test_distribution_and_outliers(sample_df):
+    analyzer = PandasAnalyzer()
+    # Add an outlier
+    df = pd.concat([sample_df, pd.DataFrame({"id": [6], "category": ["A"], "value1": [1000], "value2": [10.0], "date": [pd.to_datetime("2023-01-06")]})], ignore_index=True)
+    results = analyzer.distribution_and_outliers(df, target_columns=["value1"])
+    
+    assert len(results) == 1
+    assert results[0]["metric_name"] == "distribution_boxplot_value1"
+    
+    chart_data = results[0]["chart_data"]
+    assert "min" in chart_data
+    assert "q1" in chart_data
+    assert "median" in chart_data
+    assert "q3" in chart_data
+    assert "max" in chart_data
+    assert "outliers" in chart_data
+    assert 1000 in chart_data["outliers"]
+
+
+def test_cross_tabulation(sample_df):
+    analyzer = PandasAnalyzer()
+    
+    # Add another column to use as columns
+    sample_df["type"] = ["X", "Y", "X", "Y", "X"]
+    
+    # Test simple count
+    results = analyzer.cross_tabulation(sample_df, index_column="category", columns_column="type")
+    assert len(results) == 1
+    chart_data = results[0]["chart_data"]
+    
+    assert chart_data["categories"] == ["A", "B"]
+    assert "X" in chart_data["series_names"]
+    
+    # Test with value_column and agg_func
+    results2 = analyzer.cross_tabulation(sample_df, index_column="category", columns_column="type", value_column="value1", agg_func="sum")
+    chart_data2 = results2[0]["chart_data"]
+    assert chart_data2["series"]["X"] == [90.0, 0.0] # A-X: 10+30+50=90, B-X: 0

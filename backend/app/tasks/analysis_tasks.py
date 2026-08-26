@@ -73,7 +73,20 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
         elif task_type == "time_series":
             freq = req_dict.get("freq") or "M"
             time_column = req_dict.get("time_column")
-            results_data = analyzer.time_series_trend(df, freq=freq, time_column=time_column)
+            # If user provides agg_funcs for time_series, we can use the first one, else "sum"
+            agg_funcs = req_dict.get("agg_funcs")
+            agg_func = agg_funcs[0] if agg_funcs else "sum"
+            results_data = analyzer.time_series_trend(df, freq=freq, time_column=time_column, agg_func=agg_func)
+        elif task_type == "distribution":
+            results_data = analyzer.distribution_and_outliers(df, target_columns)
+        elif task_type == "cross_tabulation":
+            index_col = req_dict.get("cross_tab_index_column")
+            cols_col = req_dict.get("cross_tab_columns_column")
+            val_col = req_dict.get("cross_tab_value_column")
+            agg_func = req_dict.get("cross_tab_agg_func") or "count"
+            if not index_col or not cols_col:
+                raise ValueError("cross_tabulation 必須提供 cross_tab_index_column 與 cross_tab_columns_column")
+            results_data = analyzer.cross_tabulation(df, index_column=index_col, columns_column=cols_col, value_column=val_col, agg_func=agg_func)
         else:
             raise ValueError(f"未知的任務類型: {task_type}")
 

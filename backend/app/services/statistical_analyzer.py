@@ -19,7 +19,15 @@ class BaseAnalyzer(ABC):
         pass
 
     @abstractmethod
-    def time_series_trend(self, df: pd.DataFrame, freq: str = "M") -> list[dict[str, Any]]:
+    def time_series_trend(self, df: pd.DataFrame, freq: str = "M", time_column: str | None = None, agg_func: str = "sum") -> list[dict[str, Any]]:
+        pass
+
+    @abstractmethod
+    def distribution_and_outliers(self, df: pd.DataFrame, target_columns: list[str] | None = None) -> list[dict[str, Any]]:
+        pass
+
+    @abstractmethod
+    def cross_tabulation(self, df: pd.DataFrame, index_column: str, columns_column: str, value_column: str | None = None, agg_func: str = "count") -> list[dict[str, Any]]:
         pass
 
 
@@ -142,7 +150,7 @@ class PandasAnalyzer(BaseAnalyzer):
             "chart_data": chart_data
         }]
 
-    def time_series_trend(self, df: pd.DataFrame, freq: str = "M", time_column: str | None = None) -> list[dict[str, Any]]:
+    def time_series_trend(self, df: pd.DataFrame, freq: str = "M", time_column: str | None = None, agg_func: str = "sum") -> list[dict[str, Any]]:
         self._check_limit(df)
         
         if time_column and time_column in df.columns:
@@ -181,7 +189,7 @@ class PandasAnalyzer(BaseAnalyzer):
         for col in numeric_df.columns:
             temp_df[col] = numeric_df[col]
             
-        grouped = temp_df.groupby(pd.Grouper(key=time_col, freq=freq)).sum(numeric_only=True)
+        grouped = temp_df.groupby(pd.Grouper(key=time_col, freq=freq)).agg(agg_func, numeric_only=True)
         
         chart_data = {
             "time_labels": [idx.strftime("%Y-%m-%d") for idx in grouped.index],
@@ -193,5 +201,77 @@ class PandasAnalyzer(BaseAnalyzer):
             
         return [{
             "metric_name": f"time_series_trend_{freq}",
+            "chart_data": chart_data
+        }]
+
+    def distribution_and_outliers(self, df: pd.DataFrame, target_columns: list[str] | None = None) -> list[dict[str, Any]]:
+        self._check_limit(df)
+        
+        if target_columns:
+            df = df[target_columns]
+            
+        numeric_df = df.select_dtypes(include="number")
+        if numeric_df.empty:
+            return []
+            
+        results = []
+        for col in numeric_df.columns:
+            series = numeric_df[col].dropna()
+            if series.empty:
+                continue
+                
+            q1 = float(series.quantile(0.25))
+            q3 = float(series.quantile(0.75))
+            iqr = q3 - q1
+            lower_bound = float(q1 - 1.5 * iqr)
+            upper_bound = float(q3 + 1.5 * iqr)
+            
+            outliers = series[(series < lower_bound) | (series > upper_bound)].tolist()
+            
+            # Boxplot usually needs [min, Q1, median, Q3, max]
+            chart_data = {
+                "min": float(series.min()),
+                "q1": q1,
+                "median": float(series.median()),
+                "q3": q3,
+                "max": float(series.max()),
+                "lower_bound": lower_bound,
+                "upper_bound": upper_bound,
+                "outliers": outliers
+            }
+            
+            results.append({
+                "metric_name": f"distribution_boxplot_{col}",
+                "chart_data": chart_data
+            })
+            
+        return results
+
+    def cross_tabulation(self, df: pd.DataFrame, index_column: str, columns_column: str, value_column: str | None = None, agg_func: str = "count") -> list[dict[str, Any]]:
+        self._check_limit(df)
+        
+        if index_column not in df.columns or columns_column not in df.columns:
+            raise ValueError(f"'{index_column}' or '{columns_column}' not found in dataset.")
+            
+        if value_column is None:
+            # simple cross tab (frequency count)
+            pivot = pd.crosstab(df[index_column], df[columns_column])
+        else:
+            if value_column not in df.columns:
+                raise ValueError(f"'{value_column}' not found in dataset.")
+            # For pivot_table, default aggfunc is 'mean', we allow passing 'sum', 'count' etc.
+            pivot = pd.pivot_table(df, values=value_column, index=index_column, columns=columns_column, aggfunc=agg_func, fill_value=0)
+            
+        chart_data = {
+            "categories": [str(idx) for idx in pivot.index], 
+            "series_names": [str(col) for col in pivot.columns], 
+            "series": {}
+        }
+        
+        for col in pivot.columns:
+            chart_data["series"][str(col)] = pivot[col].tolist()
+            
+        return [{
+            "metric_name": f"cross_tab_{index_column}_{columns_column}",
             "chart_data": chart_data
         }]
