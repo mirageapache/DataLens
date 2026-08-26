@@ -44,6 +44,12 @@ class AnalysisRunRequest(BaseModel):
     cross_tab_agg_func: str | None = Field(default="count", description="交叉樞紐分析的聚合函式")
 
 
+class ChartDataResponse(BaseModel):
+    """單一分析維度回傳的多圖表資料結構與推薦類型"""
+    recommended_charts: list[str] = Field(description="推薦的圖表類型列表")
+    chart_data: dict[str, Any] = Field(description="圖表所需的原始資料結構")
+
+
 class AnalysisResultSummaryRead(BaseModel):
     """單筆分析結果的回傳模型 (不包含 chart_data 以減輕 Payload)"""
     id: int

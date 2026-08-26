@@ -75,3 +75,24 @@ class AnalysisService:
 
     def get_task_trend(self, dataset_id: int | None = None) -> list[dict]:
         return self.analysis_repo.get_task_execution_trend(dataset_id)
+
+    def get_recommended_charts_for_metric(self, metric_name: str, task_type: str) -> list[str]:
+        """
+        根據 metric_name 與 task_type 推薦適合的圖表類型
+        """
+        metric = metric_name.lower()
+        if "boxplot" in metric:
+            return ["boxplot"]
+        if "correlation" in metric:
+            return ["heatmap"]
+        if "descriptive" in metric:
+            return ["histogram", "bar"]
+        if "group_by" in metric:
+            return ["bar", "pie", "donut"]
+        if "time_series" in metric:
+            return ["line", "area"]
+        if "cross_tab" in metric:
+            return ["stacked_bar", "heatmap"]
+            
+        # 預設回傳
+        return ["bar"]

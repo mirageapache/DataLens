@@ -12,6 +12,7 @@ from app.schemas.analysis import (
     AnalysisResultSummaryRead,
     AnalysisTaskListResponse,
     TaskExecutionTrendRead,
+    ChartDataResponse,
 )
 from app.services.analysis_service import AnalysisService
 
@@ -91,18 +92,21 @@ def get_task_results(
     return task.results
 
 
-@router.get("/tasks/{task_id}/charts")
+@router.get("/tasks/{task_id}/charts", response_model=dict[str, ChartDataResponse])
 def get_task_charts(
     task_id: int,
     service: AnalysisService = Depends(get_analysis_service),
 ):
     """
-    取得圖表所需 JSON 資料
+    取得圖表所需 JSON 資料（含推薦圖表類型）
     """
     task = service.get_task(task_id)
-    # Return just the chart_data
     charts = {}
     for result in task.results:
         if result.chart_data:
-            charts[result.metric_name] = result.chart_data
+            recommended = service.get_recommended_charts_for_metric(result.metric_name, task.task_type)
+            charts[result.metric_name] = ChartDataResponse(
+                recommended_charts=recommended,
+                chart_data=result.chart_data
+            )
     return charts
