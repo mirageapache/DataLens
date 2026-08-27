@@ -18,11 +18,19 @@ def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
+from app.models.dataset import Dataset, DatasetColumn
+from app.models.analysis import AnalysisTask, AnalysisResult
+
 @pytest.fixture(scope="module")
 def setup_database():
     Base.metadata.create_all(bind=engine)
     yield
-    Base.metadata.drop_all(bind=engine)
+    with TestingSessionLocal() as db:
+        db.query(AnalysisResult).delete()
+        db.query(AnalysisTask).delete()
+        db.query(DatasetColumn).delete()
+        db.query(Dataset).delete()
+        db.commit()
 
 from unittest.mock import patch
 

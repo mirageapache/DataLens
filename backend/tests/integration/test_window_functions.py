@@ -49,7 +49,14 @@ def setup_database():
     db.close()
     
     yield
-    Base.metadata.drop_all(bind=engine)
+    with TestingSessionLocal() as cleanup_db:
+        from app.models.dataset import DatasetColumn
+        from app.models.analysis import AnalysisResult
+        cleanup_db.query(AnalysisResult).delete()
+        cleanup_db.query(AnalysisTask).delete()
+        cleanup_db.query(DatasetColumn).delete()
+        cleanup_db.query(Dataset).delete()
+        cleanup_db.commit()
 
 
 
