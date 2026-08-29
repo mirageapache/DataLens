@@ -72,6 +72,7 @@ class AnalysisTaskRead(BaseModel):
     dataset_id: int
     task_type: str
     status: str
+    created_at: dt.datetime
     started_at: dt.datetime | None = None
     completed_at: dt.datetime | None = None
 

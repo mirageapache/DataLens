@@ -60,7 +60,7 @@
                   </span>
                 }
               </td>
-              <td class="px-6 py-4 text-gray-500 text-xs">{{dataset.created_at | date:'yyyy-MM-dd HH:mm'}}</td>
+              <td class="px-6 py-4 text-gray-500 text-xs">{{dataset.created_at | date:'yyyy-MM-dd HH:mm':'+0800'}}</td>
               <td class="px-6 py-4 text-right space-x-2">
                 <select #taskTypeSelect class="text-xs border border-matBorder rounded px-2 py-1 bg-white mr-2 focus:outline-none focus:border-matPrimary" [disabled]="dataset.status.toUpperCase() !== 'READY'">
                   <option value="descriptive_with_correlation">綜合分析</option>

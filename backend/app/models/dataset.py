@@ -1,6 +1,6 @@
 import datetime as dt
 
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import ForeignKey, func, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -15,7 +15,7 @@ class Dataset(Base):
     row_count: Mapped[int | None]
     column_count: Mapped[int | None]
     status: Mapped[str] = mapped_column(default="uploaded")  # uploaded/processing/ready/failed
-    created_at: Mapped[dt.datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     columns: Mapped[list["DatasetColumn"]] = relationship(
         back_populates="dataset", cascade="all, delete-orphan"

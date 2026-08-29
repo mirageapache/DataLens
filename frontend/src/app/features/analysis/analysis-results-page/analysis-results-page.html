@@ -48,7 +48,7 @@
           </div>
           <p class="text-xs text-matTextSecondary mt-1">
             目標資料集：<span class="font-semibold text-gray-700">Dataset #{{ task.dataset_id }}</span>
-            • 建立時間：{{ task.created_at | date:'yyyy-MM-dd HH:mm:ss' }}
+            • 建立時間：{{ task.created_at | date:'yyyy-MM-dd HH:mm:ss':'+0800' }}
             • 任務類型：<span class="font-semibold text-gray-700 uppercase">{{ task.task_type }}</span>
           </p>
         </div>

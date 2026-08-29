@@ -1,7 +1,7 @@
 import datetime as dt
 from typing import Any
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, func, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,8 +16,9 @@ class AnalysisTask(Base):
     task_type: Mapped[str]  # e.g., "descriptive", "correlation", "group_by", "time_series"
     celery_task_id: Mapped[str | None] = mapped_column(default=None)
     status: Mapped[str] = mapped_column(default="PENDING")  # PENDING/STARTED/COMPLETED/FAILED
-    started_at: Mapped[dt.datetime | None] = mapped_column(default=None)
-    completed_at: Mapped[dt.datetime | None] = mapped_column(default=None)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    started_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
     dataset: Mapped["Dataset"] = relationship(back_populates="analysis_tasks")
     results: Mapped[list["AnalysisResult"]] = relationship(

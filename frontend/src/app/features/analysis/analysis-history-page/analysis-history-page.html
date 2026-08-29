@@ -61,7 +61,7 @@
                   </span>
                 }
               </td>
-              <td class="px-6 py-4 text-gray-500 text-xs">{{ task.created_at | date:'yyyy-MM-dd HH:mm' }}</td>
+              <td class="px-6 py-4 text-gray-500 text-xs">{{ task.created_at | date:'yyyy-MM-dd HH:mm':'+0800' }}</td>
               <td class="px-6 py-4 text-right">
                 <button (click)="$event.stopPropagation(); goToDashboard(task.id)" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-3 py-1.5 rounded bg-indigo-50 hover:bg-indigo-100 transition">
                   檢視報告

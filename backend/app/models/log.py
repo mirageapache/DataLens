@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Index, String, Text
+from sqlalchemy import DateTime, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -20,6 +20,7 @@ class SystemLog(Base):
     error_detail: Mapped[str | None] = mapped_column(Text, default=None)
     # Use timezone-aware UTC timestamp (datetime.utcnow is deprecated since Python 3.12)
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
 
