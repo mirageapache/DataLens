@@ -11,6 +11,9 @@ from app.core.config import UPLOAD_ROOT
 from app.models.dataset import Dataset, DatasetColumn
 from app.repositories.dataset_repository import DatasetRepository
 from app.schemas.dataset import DatasetListResponse, DatasetPreviewResponse, DatasetRead, DatasetUpdate
+from app.schemas.analysis import AnalysisRunRequest
+from app.repositories.analysis_repository import AnalysisRepository
+from app.services.analysis_service import AnalysisService
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +109,19 @@ class DatasetService:
             )
 
         created = self.repo.create(dataset)
+        
+        # 自動觸發基礎分析任務
+        try:
+            analysis_repo = AnalysisRepository(self.repo.db)
+            analysis_service = AnalysisService(analysis_repo, self.repo)
+            run_req = AnalysisRunRequest(
+                dataset_id=created.id,
+                task_type="descriptive_with_correlation"
+            )
+            analysis_service.run_analysis(self.repo.db, run_req)
+        except Exception as e:
+            logger.error("自動觸發分析任務失敗: %s", e)
+            
         return DatasetRead.model_validate(created)
 
     # 列出資料集

@@ -41,6 +41,21 @@ class AnalysisRepository:
         self.db.refresh(task)
         return task
 
+    def update_task_progress(self, task_id: int, progress: int) -> None:
+        task = self.get_task(task_id)
+        if task:
+            task.progress = progress
+            self.db.add(task)
+            self.db.commit()
+
+    def delete_task(self, task_id: int) -> bool:
+        task = self.get_task(task_id)
+        if not task:
+            return False
+        self.db.delete(task)
+        self.db.commit()
+        return True
+
     def get_task(self, task_id: int) -> AnalysisTask | None:
         stmt = (
             select(AnalysisTask)

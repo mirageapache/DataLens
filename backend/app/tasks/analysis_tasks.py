@@ -37,6 +37,7 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
 
         # 更新任務狀態為已開始
         analysis_repo.update_task_status(task.id, "STARTED")
+        analysis_repo.update_task_progress(task.id, 10)
 
         # 1. 讀取資料，並驗證路徑安全性
         full_file_path = (UPLOAD_ROOT / dataset.file_path).resolve()
@@ -51,6 +52,8 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
             df = pd.read_excel(full_file_path)
         else:
             raise ValueError("不支援的分析檔案格式。")
+            
+        analysis_repo.update_task_progress(task.id, 30)
 
         # 2. 執行分析
         results_data = []
@@ -90,10 +93,13 @@ def run_analysis_task(self, task_id: int, req_dict: dict):
         else:
             raise ValueError(f"未知的任務類型: {task_type}")
 
+        analysis_repo.update_task_progress(task.id, 80)
+
         # 3. 儲存分析結果
         analysis_repo.save_analysis_results(task.id, results_data)
         
         # 4. 更新任務狀態為已完成
+        analysis_repo.update_task_progress(task.id, 100)
         analysis_repo.update_task_status(task.id, "COMPLETED")
         logger.info(f"分析任務 {task_id} 成功完成。")
 

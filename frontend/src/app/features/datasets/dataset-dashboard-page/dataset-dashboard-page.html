@@ -1,0 +1,104 @@
+<div class="max-w-6xl mx-auto space-y-6 pt-4">
+  <!-- Top Bar -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <button (click)="location.back()" class="text-gray-500 hover:text-matPrimary flex items-center space-x-1 text-sm transition">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>返回列表</span>
+      </button>
+      <span class="text-gray-300">/</span>
+      <span class="text-xs font-mono bg-gray-200 text-gray-700 px-2 py-0.5 rounded">Dataset #{{ datasetId }}</span>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="flex justify-center p-12">
+      <i class="fa-solid fa-spinner fa-spin text-4xl text-matPrimary"></i>
+    </div>
+  }
+
+  @if (error) {
+    <div class="bg-red-50 border border-red-200 rounded-xl p-6 flex items-start space-x-4">
+      <div class="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center shrink-0 text-lg">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <div class="flex-1">
+        <p class="font-semibold text-red-800">載入失敗</p>
+        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+      </div>
+      <button (click)="loadDashboard()" class="text-sm text-red-700 hover:text-red-900 font-medium border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition">
+        <i class="fa-solid fa-rotate-right mr-1"></i>重試
+      </button>
+    </div>
+  }
+
+  @if (!isLoading && !error && dataset) {
+    <!-- Dashboard Header -->
+    <div class="bg-matSurface rounded-xl border border-matBorder shadow-sm p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800 flex items-center space-x-3">
+            <i class="fa-regular fa-file-excel text-emerald-600"></i>
+            <span>{{ dataset.filename }} Dashboard</span>
+          </h1>
+          <p class="text-sm text-matTextSecondary mt-2">
+            共 {{ dataset.row_count | number }} 列, {{ dataset.column_count }} 欄
+            • 上傳時間: {{ dataset.created_at | date:'yyyy-MM-dd HH:mm:ss' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- New Analysis Block Form -->
+    <div class="bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm p-5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4 w-full">
+          <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-lg shrink-0">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+          <div class="flex-1 flex items-center space-x-4">
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-indigo-900">新增分析區塊</span>
+              <span class="text-xs text-indigo-700">選擇想針對此資料集執行的分析類型</span>
+            </div>
+            
+            <select [(ngModel)]="newTaskType" class="text-sm border border-indigo-200 rounded-lg px-3 py-2 bg-white flex-1 max-w-xs focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400">
+              <option value="descriptive_with_correlation">綜合分析 (描述統計+相關性)</option>
+              <option value="group_by">分組聚合分析</option>
+              <option value="time_series">時間序列趨勢</option>
+              <option value="distribution">分佈與異常值分析</option>
+              <option value="cross_tabulation">類別交叉樞紐分析</option>
+            </select>
+            
+            <button (click)="createNewTask()" [disabled]="isCreatingNewTask" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition flex items-center space-x-2 disabled:opacity-50">
+              @if (isCreatingNewTask) {
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>處理中...</span>
+              } @else {
+                <i class="fa-solid fa-play"></i>
+                <span>產生分析</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis Blocks -->
+    <div class="space-y-6">
+      @for (task of tasks; track task.id) {
+        <div class="relative">
+          <app-analysis-block [taskId]="task.id" [showHeader]="true" (deleted)="onTaskDeleted($event)"></app-analysis-block>
+        </div>
+      } @empty {
+        <div class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-12 text-center">
+          <div class="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+            <i class="fa-solid fa-chart-bar"></i>
+          </div>
+          <h3 class="text-lg font-bold text-gray-700">尚無分析區塊</h3>
+          <p class="text-sm text-gray-500 mt-1 max-w-sm mx-auto">點擊上方「新增分析區塊」開始對這份資料集進行探索與分析。</p>
+        </div>
+      }
+    </div>
+  }
+</div>

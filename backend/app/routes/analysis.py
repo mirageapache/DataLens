@@ -80,6 +80,18 @@ def get_task(
     return task
 
 
+@router.delete("/tasks/{task_id}", status_code=204)
+def delete_task(
+    task_id: int,
+    service: AnalysisService = Depends(get_analysis_service),
+):
+    """
+    刪除分析任務
+    """
+    service.delete_task(task_id)
+    return None
+
+
 @router.get("/tasks/{task_id}/results", response_model=list[AnalysisResultSummaryRead])
 def get_task_results(
     task_id: int,

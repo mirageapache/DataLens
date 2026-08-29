@@ -70,6 +70,13 @@ class AnalysisService:
             )
         return task
 
+    def delete_task(self, task_id: int) -> None:
+        if not self.analysis_repo.delete_task(task_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Analysis task {task_id} not found."
+            )
+
     def list_tasks(self, page: int = 1, page_size: int = 20, dataset_id: int | None = None) -> tuple[list[AnalysisTask], int]:
         return self.analysis_repo.list_tasks(page, page_size, dataset_id)
 

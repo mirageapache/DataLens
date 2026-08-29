@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -28,10 +28,13 @@ export class ApiService {
    * 上傳資料集檔案 (CSV 或 Excel)
    * @param file 欲上傳的檔案
    */
-  uploadDataset(file: File): Observable<Dataset> {
+  uploadDataset(file: File): Observable<HttpEvent<Dataset>> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<Dataset>(`${this.apiUrl}/datasets/upload`, formData);
+    return this.http.post<Dataset>(`${this.apiUrl}/datasets/upload`, formData, {
+      reportProgress: true,
+      observe: 'events'
+    });
   }
 
   /**
@@ -116,6 +119,14 @@ export class ApiService {
    */
   getAnalysisTask(taskId: number): Observable<AnalysisTask> {
     return this.http.get<AnalysisTask>(`${this.apiUrl}/analysis/tasks/${taskId}`);
+  }
+
+  /**
+   * 刪除指定的分析任務
+   * @param taskId 任務 ID
+   */
+  deleteAnalysisTask(taskId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/analysis/tasks/${taskId}`);
   }
 
   /**

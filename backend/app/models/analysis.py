@@ -16,6 +16,7 @@ class AnalysisTask(Base):
     task_type: Mapped[str]  # e.g., "descriptive", "correlation", "group_by", "time_series"
     celery_task_id: Mapped[str | None] = mapped_column(default=None)
     status: Mapped[str] = mapped_column(default="PENDING")  # PENDING/STARTED/COMPLETED/FAILED
+    progress: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     started_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), default=None)

@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { ApiService } from '../../../core/services/api';
 import { Dataset } from '../../../core/models/api.models';
 import { DatasetPreview } from '../dataset-preview/dataset-preview';
+import { HttpEvent, HttpEventType } from '@angular/common/http';
 
 @Component({
   selector: 'app-datasets-page',
@@ -28,6 +29,7 @@ export class DatasetsPage implements OnInit {
   isDragging = false;
   selectedFile: File | null = null;
   isUploading = false;
+  uploadProgress = 0;
   uploadError: string | null = null;
 
   toastMessage: string | null = null;
@@ -57,6 +59,7 @@ export class DatasetsPage implements OnInit {
     this.isUploadModalOpen = true;
     this.selectedFile = null;
     this.uploadError = null;
+    this.uploadProgress = 0;
   }
 
   closeUploadDialog() {
@@ -112,12 +115,19 @@ export class DatasetsPage implements OnInit {
   submitUpload() {
     if (!this.selectedFile) return;
     this.isUploading = true;
+    this.uploadProgress = 0;
     this.api.uploadDataset(this.selectedFile).subscribe({
-      next: (res) => {
-        this.isUploading = false;
-        this.closeUploadDialog();
-        this.showToast('檔案上傳與解析成功！', 'success');
-        this.loadDatasets();
+      next: (event: HttpEvent<Dataset>) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          if (event.total) {
+            this.uploadProgress = Math.round(100 * event.loaded / event.total);
+          }
+        } else if (event.type === HttpEventType.Response) {
+          this.isUploading = false;
+          this.closeUploadDialog();
+          this.showToast('檔案上傳與處理成功！', 'success');
+          this.loadDatasets();
+        }
       },
       error: (err) => {
         this.isUploading = false;
@@ -126,16 +136,8 @@ export class DatasetsPage implements OnInit {
     });
   }
 
-  triggerAnalysis(datasetId: number, taskType: string = 'descriptive_with_correlation') {
-    this.api.runAnalysis({ dataset_id: datasetId, task_type: taskType }).subscribe({
-      next: (task) => {
-        this.showToast('分析任務已觸發！', 'success');
-        this.router.navigate(['/analysis', task.id, 'status']);
-      },
-      error: (err) => {
-        this.showToast('觸發分析失敗', 'error');
-      }
-    });
+  goToDashboard(datasetId: number) {
+    this.router.navigate(['/datasets', datasetId, 'dashboard']);
   }
 
   deleteDataset(datasetId: number) {
