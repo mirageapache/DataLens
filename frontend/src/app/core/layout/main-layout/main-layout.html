@@ -1,7 +1,7 @@
 <!-- ================= App Shell: Toolbar ================= -->
 <header class="bg-matPrimary text-white h-16 flex items-center justify-between px-4 mat-elevation-2 z-10 sticky top-0">
   <div class="flex items-center space-x-4">
-    <button class="text-white hover:bg-white/10 w-10 h-10 rounded-full flex items-center justify-center transition">
+    <button (click)="toggleMobileMenu()" class="lg:hidden text-white hover:bg-white/10 w-10 h-10 rounded-full flex items-center justify-center transition">
       <i class="fa-solid fa-bars text-lg"></i>
     </button>
     <div class="flex items-center space-x-2">
@@ -26,8 +26,13 @@
 <!-- ================= App Shell: Sidenav Container ================= -->
 <div class="flex overflow-hidden h-[calc(100vh-64px)]">
   
+  <!-- Mobile Backdrop -->
+  <div *ngIf="isMobileMenuOpen" (click)="toggleMobileMenu()" class="fixed inset-0 bg-black/50 z-30 lg:hidden"></div>
+
   <!-- Left SideNav (mat-sidenav) -->
-  <aside class="w-60 bg-matSurface border-r border-matBorder flex flex-col justify-between py-2 shrink-0">
+  <aside 
+    [ngClass]="isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'"
+    class="w-60 bg-matSurface border-r border-matBorder flex flex-col justify-between py-2 shrink-0 fixed inset-y-0 left-0 lg:relative lg:inset-auto z-40 h-full transition-transform duration-300 lg:translate-x-0">
     <nav class="space-y-1 px-2">
       <a routerLink="/datasets" routerLinkActive="bg-indigo-50 text-matPrimary font-medium" [routerLinkActiveOptions]="{exact: true}" class="flex items-center space-x-3 px-4 py-3 rounded-lg text-matTextSecondary hover:bg-gray-100 font-medium text-sm transition">
         <i class="fa-solid fa-folder-closed text-base" [class.text-matPrimary]="router.url === '/datasets'"></i>

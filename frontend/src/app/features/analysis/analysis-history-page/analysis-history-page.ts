@@ -41,4 +41,17 @@ export class AnalysisHistoryPage implements OnInit {
   goToDashboard(taskId: number) {
     this.router.navigate(['/analysis', taskId, 'results']);
   }
+
+  getTaskTypeName(type: string): string {
+    const map: Record<string, string> = {
+      'descriptive': '敘述性統計',
+      'correlation': '相關性分析',
+      'descriptive_with_correlation': '敘述性統計與相關性',
+      'group_by': '分組聚合分析',
+      'time_series': '時間序列分析',
+      'distribution': '數據分佈分析',
+      'cross_tabulation': '交叉樞紐分析'
+    };
+    return map[type] || type;
+  }
 }

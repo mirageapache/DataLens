@@ -58,8 +58,8 @@
               </p>
             </div>
           </div>
-          <div>
-            <button (click)="deleteBlock()" class="text-red-500 hover:text-red-700 font-medium px-3 py-1.5 rounded hover:bg-red-50 transition border border-red-200 text-sm flex items-center">
+          <div class="w-full sm:w-auto mt-4 sm:mt-0">
+            <button (click)="deleteBlock()" class="w-full sm:w-auto text-red-500 hover:text-red-700 font-medium px-3 py-1.5 rounded hover:bg-red-50 transition border border-red-200 text-sm flex items-center justify-center">
               <i class="fa-regular fa-trash-can mr-1.5"></i>刪除區塊
             </button>
           </div>
@@ -69,7 +69,7 @@
       <!-- Analysis Results Tabs -->
       <div class="bg-matSurface rounded-xl border border-matBorder shadow-sm overflow-hidden mt-4">
         <!-- Tab Headers -->
-        <div class="flex border-b border-matBorder bg-gray-50/50 px-4 text-sm font-medium text-gray-600 overflow-x-auto">
+        <div class="flex border-b border-matBorder bg-gray-50/50 px-4 text-sm font-medium text-gray-600 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           @for (tab of availableTabs; track tab.id) {
             <button (click)="activeTab = tab.id" 
                     [ngClass]="{'border-b-2 border-matPrimary text-matPrimary font-bold': activeTab === tab.id}" 
@@ -93,7 +93,7 @@
                   <span>連續型欄位統計摘要表</span>
                 </h3>
                 <div class="overflow-x-auto border border-matBorder rounded-lg">
-                  <table class="w-full text-left text-xs">
+                  <table class="w-full text-left text-xs whitespace-nowrap min-w-max">
                     <thead class="bg-gray-50 border-b border-matBorder text-gray-500 uppercase font-semibold">
                       <tr>
                         <th class="px-4 py-3">欄位名稱 (Metric)</th>

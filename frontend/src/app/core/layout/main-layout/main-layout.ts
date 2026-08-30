@@ -9,4 +9,9 @@ import { RouterModule, Router } from '@angular/router';
 })
 export class MainLayout {
   public router = inject(Router);
+  public isMobileMenuOpen: boolean = false;
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
 }

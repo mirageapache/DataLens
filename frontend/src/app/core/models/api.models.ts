@@ -82,6 +82,8 @@ export interface AnalysisTask {
   task_type: string;
   /** Celery 背景任務 ID (可能為空，若尚未派發或同步執行) */
   celery_task_id?: string;
+  /** 任務進度 (0-100) */
+  progress?: number;
   /** 任務狀態 (例如: PENDING, STARTED, COMPLETED, FAILED) */
   status: string;
   /** 錯誤訊息 (如果狀態為 FAILED) */

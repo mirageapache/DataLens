@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../../core/services/api';
 import { Dataset } from '../../../core/models/api.models';
 import { DatasetPreview } from '../dataset-preview/dataset-preview';
@@ -15,6 +15,7 @@ import { HttpEvent, HttpEventType } from '@angular/common/http';
 export class DatasetsPage implements OnInit {
   private api = inject(ApiService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   datasets: Dataset[] = [];
   totalCount = 0;
@@ -24,6 +25,7 @@ export class DatasetsPage implements OnInit {
 
   selectedDatasetId: number | null = null;
   selectedDatasetName: string = '';
+  selectedDataset: Dataset | null = null;
 
   isUploadModalOpen = false;
   isDragging = false;
@@ -47,6 +49,15 @@ export class DatasetsPage implements OnInit {
         this.datasets = res.items;
         this.totalCount = res.total;
         this.isLoading = false;
+
+        const previewId = this.route.snapshot.queryParams['preview'];
+        if (previewId) {
+          const datasetToPreview = this.datasets.find(d => d.id === +previewId);
+          if (datasetToPreview) {
+            this.viewDataset(datasetToPreview);
+          }
+          this.router.navigate([], { queryParams: { preview: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        }
       },
       error: (err) => {
         this.showToast('無法載入資料集列表', 'error');
@@ -154,6 +165,21 @@ export class DatasetsPage implements OnInit {
     }
   }
 
+  deleteDatasetAndClose(datasetId: number) {
+    if (confirm('確定要刪除這筆資料集嗎？此操作將無法復原。')) {
+      this.api.deleteDataset(datasetId).subscribe({
+        next: () => {
+          this.showToast('資料集已成功刪除！', 'success');
+          this.closePreview();
+          this.loadDatasets();
+        },
+        error: (err) => {
+          this.showToast('刪除失敗，請稍後再試。', 'error');
+        }
+      });
+    }
+  }
+
   showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
     this.toastMessage = message;
     this.toastType = type;
@@ -172,10 +198,12 @@ export class DatasetsPage implements OnInit {
     }
     this.selectedDatasetId = dataset.id;
     this.selectedDatasetName = dataset.filename;
+    this.selectedDataset = dataset;
   }
 
   closePreview() {
     this.selectedDatasetId = null;
     this.selectedDatasetName = '';
+    this.selectedDataset = null;
   }
 }

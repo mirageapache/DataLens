@@ -32,20 +32,20 @@
       <table class="w-full text-left text-sm">
         <thead class="bg-gray-50 border-b border-matBorder text-gray-500 font-semibold uppercase text-xs">
           <tr>
-            <th class="px-6 py-4 w-1/4">Task ID</th>
+            <th class="px-6 py-4">Task ID</th>
             <th class="px-6 py-4">資料集 ID</th>
             <th class="px-6 py-4">類型</th>
             <th class="px-6 py-4">狀態</th>
             <th class="px-6 py-4">建立時間</th>
-            <th class="px-6 py-4 text-right">操作</th>
+            <th class="px-6 py-4 text-center">操作</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-matBorder">
           @for (task of tasks; track task.id) {
-            <tr class="hover:bg-gray-50 transition cursor-pointer" (click)="goToDashboard(task.id)">
+            <tr class="hover:bg-gray-50 transition">
               <td class="px-6 py-4 font-mono text-gray-900 text-xs">task_{{ task.id }}</td>
-              <td class="px-6 py-4 text-gray-600">Dataset #{{ task.dataset_id }}</td>
-              <td class="px-6 py-4 text-gray-600 uppercase">{{ task.task_type }}</td>
+              <td class="px-6 py-4 text-gray-600"><a [routerLink]="['/datasets']" [queryParams]="{preview: task.dataset_id}" class="text-matPrimary hover:underline font-medium">資料集 #{{ task.dataset_id }}</a></td>
+              <td class="px-6 py-4 text-gray-600 font-medium">{{ getTaskTypeName(task.task_type) }}</td>
               <td class="px-6 py-4">
                 @if (task.status.toUpperCase() === 'COMPLETED') {
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
@@ -62,9 +62,9 @@
                 }
               </td>
               <td class="px-6 py-4 text-gray-500 text-xs">{{ task.created_at | date:'yyyy-MM-dd HH:mm':'+0800' }}</td>
-              <td class="px-6 py-4 text-right">
-                <button (click)="$event.stopPropagation(); goToDashboard(task.id)" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-3 py-1.5 rounded bg-indigo-50 hover:bg-indigo-100 transition">
-                  檢視報告
+              <td class="px-6 py-4 text-center">
+                <button (click)="goToDashboard(task.id)" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-3 py-1.5 rounded bg-indigo-50 hover:bg-indigo-100 transition">
+                  檢查報告
                 </button>
               </td>
             </tr>

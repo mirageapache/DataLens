@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, File, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+import os
 
 from app.core.db import get_db
 from app.schemas.dataset import DatasetListResponse, DatasetRead, DatasetUpdate, DatasetPreviewResponse
@@ -45,8 +47,17 @@ def delete_dataset(dataset_id: int, db: Session = Depends(get_db)):
 @router.get("/{dataset_id}/preview", response_model=DatasetPreviewResponse)
 def get_dataset_preview(
     dataset_id: int, 
-    limit: int = Query(default=100, ge=1, le=1000), 
+    limit: int = Query(default=100, ge=1, le=2000), 
     db: Session = Depends(get_db)
 ):
     service = DatasetService(db)
     return service.get_dataset_preview(dataset_id, limit=limit)
+
+# 下載資料集
+@router.get("/{dataset_id}/download")
+def download_dataset(dataset_id: int, db: Session = Depends(get_db)):
+    service = DatasetService(db)
+    dataset = service.get_dataset(dataset_id)
+    if not dataset or not os.path.exists(dataset.file_path):
+        raise HTTPException(status_code=404, detail="Dataset file not found")
+    return FileResponse(dataset.file_path, filename=dataset.filename)
