@@ -1,0 +1,22 @@
+<div class="fixed top-5 right-5 z-50 flex flex-col gap-3 w-80 pointer-events-none">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="pointer-events-auto bg-white/95 backdrop-blur-md rounded-xl shadow-lg border-l-4 overflow-hidden relative"
+         [ngClass]="[getBorderColor(toast.type), toast.closing ? 'animate-slide-out-right' : 'animate-slide-in-right']">
+      <div class="p-4 flex items-start gap-3">
+        <div class="flex-shrink-0 mt-0.5">
+          <i [class]="getIconClass(toast.type)"></i>
+        </div>
+        <div class="flex-1">
+          <h4 class="text-sm font-bold text-gray-800">{{ toast.title }}</h4>
+          <p class="text-xs text-gray-500 mt-1">{{ toast.message }}</p>
+        </div>
+        <button (click)="toastService.remove(toast.id)" class="text-gray-400 hover:text-gray-600 transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="h-1 bg-gray-100 w-full">
+        <div class="h-full bg-gray-300 animate-progress-shrink"></div>
+      </div>
+    </div>
+  }
+</div>

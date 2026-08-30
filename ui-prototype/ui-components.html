@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataLens - 共用元件預覽 (UI Components)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Roboto & Noto Sans TC -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            matPrimary: '#3f51b5',
+            matPrimaryHover: '#303f9f',
+            matBg: '#f5f5f5',
+            matSurface: '#ffffff',
+            matBorder: '#e0e0e0',
+            matTextPrimary: 'rgba(0, 0, 0, 0.87)',
+            matTextSecondary: 'rgba(0, 0, 0, 0.60)',
+          },
+          fontFamily: {
+            sans: ['Roboto', 'Noto Sans TC', 'sans-serif'],
+          },
+          animation: {
+            'slide-in-right': 'slideInRight 0.3s ease-out forwards',
+            'slide-out-right': 'slideOutRight 0.3s ease-in forwards',
+            'pop-in': 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+            'progress-shrink': 'shrink 3s linear forwards',
+          },
+          keyframes: {
+            slideInRight: {
+              '0%': { transform: 'translateX(100%)', opacity: '0' },
+              '100%': { transform: 'translateX(0)', opacity: '1' },
+            },
+            slideOutRight: {
+              '0%': { transform: 'translateX(0)', opacity: '1' },
+              '100%': { transform: 'translateX(100%)', opacity: '0' },
+            },
+            popIn: {
+              '0%': { transform: 'scale(0.8)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            },
+            shrink: {
+              '0%': { width: '100%' },
+              '100%': { width: '0%' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Tooltip Arrow Utilities */
+    .tooltip-arrow-top::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #1f2937 transparent transparent transparent;
+    }
+    .tooltip-arrow-bottom::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: transparent transparent #1f2937 transparent;
+    }
+  </style>
+</head>
+<body class="bg-matBg text-matTextPrimary font-sans min-h-screen p-8">
+
+  <div class="max-w-4xl mx-auto space-y-8">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-800">共用元件預覽 (UI Components)</h1>
+      <p class="text-matTextSecondary mt-2">點擊下方按鈕預覽 Toast、Dialog 提示彈窗以及 Tooltip。</p>
+    </header>
+
+    <!-- Toasts Section -->
+    <section class="bg-matSurface p-6 rounded-xl shadow-sm border border-matBorder">
+      <h2 class="text-xl font-bold mb-4 border-b pb-2">1. Toast 訊息提示</h2>
+      <div class="flex flex-wrap gap-4">
+        <button onclick="showToast('success', '儲存成功！', '您的設定已經成功更新。')" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow transition">
+          Success Toast
+        </button>
+        <button onclick="showToast('error', '發生錯誤', '無法連接到伺服器，請稍後再試。')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow transition">
+          Error Toast
+        </button>
+        <button onclick="showToast('info', '系統通知', '有新的資料集可供分析。')" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow transition">
+          Info Toast
+        </button>
+      </div>
+    </section>
+
+    <!-- Dialog / Alert Section -->
+    <section class="bg-matSurface p-6 rounded-xl shadow-sm border border-matBorder">
+      <h2 class="text-xl font-bold mb-4 border-b pb-2">2. 提示彈窗 (SweetAlert-style Dialog)</h2>
+      <div class="flex flex-wrap gap-4">
+        <button onclick="showDialog('success')" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow transition">
+          Success Dialog
+        </button>
+        <button onclick="showDialog('warning')" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg shadow transition">
+          Warning / Confirm Dialog
+        </button>
+        <button onclick="showDialog('error')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg shadow transition">
+          Error Dialog
+        </button>
+      </div>
+    </section>
+
+    <!-- Tooltip Section -->
+    <section class="bg-matSurface p-6 rounded-xl shadow-sm border border-matBorder">
+      <h2 class="text-xl font-bold mb-4 border-b pb-2">3. Tooltip 提示框</h2>
+      <div class="flex flex-wrap gap-12 p-4 pt-8">
+        
+        <!-- Tooltip Top -->
+        <div class="relative group flex items-center justify-center">
+          <button class="px-4 py-2 bg-matPrimary text-white rounded hover:bg-matPrimaryHover transition shadow cursor-help">
+            Hover Me (Top)
+          </button>
+          <div class="absolute bottom-full mb-2 hidden group-hover:block w-max max-w-xs z-10 animate-fade-in">
+            <div class="bg-gray-800 text-white text-sm px-3 py-2 rounded shadow-lg tooltip-arrow-top">
+              這是一段位於上方的提示文字，用來補充說明。
+            </div>
+          </div>
+        </div>
+
+        <!-- Tooltip Bottom -->
+        <div class="relative group flex items-center justify-center">
+          <button class="px-4 py-2 bg-matPrimary text-white rounded hover:bg-matPrimaryHover transition shadow cursor-help">
+            Hover Me (Bottom)
+          </button>
+          <div class="absolute top-full mt-2 hidden group-hover:block w-max max-w-xs z-10 animate-fade-in">
+            <div class="bg-gray-800 text-white text-sm px-3 py-2 rounded shadow-lg tooltip-arrow-bottom">
+              這是一段位於下方的提示文字！
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- Toast Container (Fixed top right) -->
+  <!-- ============================================== -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 w-80 pointer-events-none">
+    <!-- Toasts will be injected here -->
+  </div>
+
+  <!-- ============================================== -->
+  <!-- Dialog Overlay (Hidden by default) -->
+  <!-- ============================================== -->
+  <div id="dialog-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <!-- Dialog Content -->
+    <div id="dialog-content" class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 opacity-0 transition-all duration-300">
+      
+      <!-- Icon Container -->
+      <div id="dialog-icon-container" class="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4">
+        <i id="dialog-icon" class="text-4xl"></i>
+      </div>
+      
+      <!-- Text -->
+      <h3 id="dialog-title" class="text-2xl font-bold text-gray-800 mb-2"></h3>
+      <p id="dialog-message" class="text-matTextSecondary mb-6"></p>
+      
+      <!-- Actions -->
+      <div id="dialog-actions" class="flex justify-center gap-3">
+        <button id="dialog-cancel" onclick="closeDialog()" class="hidden px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition shadow-sm">
+          取消
+        </button>
+        <button id="dialog-confirm" onclick="closeDialog()" class="px-5 py-2.5 bg-matPrimary hover:bg-matPrimaryHover text-white rounded-lg font-medium transition shadow-sm">
+          確定
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- JavaScript for Interactions -->
+  <!-- ============================================== -->
+  <script>
+    // --- Toast Logic ---
+    let toastId = 0;
+    const toastIcons = {
+      success: '<i class="fa-solid fa-circle-check text-green-500 text-xl"></i>',
+      error: '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>',
+      info: '<i class="fa-solid fa-circle-info text-blue-500 text-xl"></i>'
+    };
+    const toastBorders = {
+      success: 'border-green-500',
+      error: 'border-red-500',
+      info: 'border-blue-500'
+    };
+
+    function showToast(type, title, message) {
+      const container = document.getElementById('toast-container');
+      const id = 'toast-' + (++toastId);
+      
+      const toastHTML = `
+        <div id="${id}" class="pointer-events-auto bg-white/95 backdrop-blur-md rounded-xl shadow-lg border-l-4 ${toastBorders[type]} overflow-hidden animate-slide-in-right relative">
+          <div class="p-4 flex items-start gap-3">
+            <div class="flex-shrink-0 mt-0.5">
+              ${toastIcons[type]}
+            </div>
+            <div class="flex-1">
+              <h4 class="text-sm font-bold text-gray-800">${title}</h4>
+              <p class="text-xs text-gray-500 mt-1">${message}</p>
+            </div>
+            <button onclick="removeToast('${id}')" class="text-gray-400 hover:text-gray-600 transition">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="h-1 bg-gray-100 w-full">
+            <div class="h-full bg-gray-300 animate-progress-shrink"></div>
+          </div>
+        </div>
+      `;
+      
+      container.insertAdjacentHTML('beforeend', toastHTML);
+      
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        removeToast(id);
+      }, 3000);
+    }
+
+    function removeToast(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('animate-slide-in-right');
+        el.classList.add('animate-slide-out-right');
+        setTimeout(() => el.remove(), 300); // Wait for animation
+      }
+    }
+
+    // --- Dialog Logic ---
+    const dialogConfigs = {
+      success: {
+        iconClass: 'fa-solid fa-check',
+        iconBg: 'bg-green-100',
+        iconColor: 'text-green-500',
+        title: '操作成功！',
+        message: '您的資料已成功寫入資料庫中。',
+        showCancel: false,
+        confirmColor: 'bg-matPrimary hover:bg-matPrimaryHover'
+      },
+      warning: {
+        iconClass: 'fa-solid fa-exclamation',
+        iconBg: 'bg-yellow-100',
+        iconColor: 'text-yellow-600',
+        title: '確定要刪除嗎？',
+        message: '此動作無法復原，您確定要刪除選定的資料集嗎？',
+        showCancel: true,
+        confirmColor: 'bg-red-500 hover:bg-red-600'
+      },
+      error: {
+        iconClass: 'fa-solid fa-xmark',
+        iconBg: 'bg-red-100',
+        iconColor: 'text-red-500',
+        title: '操作失敗',
+        message: '發生未知的錯誤，請聯絡系統管理員。',
+        showCancel: false,
+        confirmColor: 'bg-matPrimary hover:bg-matPrimaryHover'
+      }
+    };
+
+    function showDialog(type) {
+      const config = dialogConfigs[type];
+      
+      // Setup icon
+      const iconContainer = document.getElementById('dialog-icon-container');
+      iconContainer.className = `w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${config.iconBg}`;
+      
+      const icon = document.getElementById('dialog-icon');
+      icon.className = `text-4xl ${config.iconClass} ${config.iconColor}`;
+      
+      // Setup text
+      document.getElementById('dialog-title').innerText = config.title;
+      document.getElementById('dialog-message').innerText = config.message;
+      
+      // Setup buttons
+      const cancelBtn = document.getElementById('dialog-cancel');
+      if (config.showCancel) {
+        cancelBtn.classList.remove('hidden');
+      } else {
+        cancelBtn.classList.add('hidden');
+      }
+      
+      const confirmBtn = document.getElementById('dialog-confirm');
+      // Reset color classes then apply new ones
+      confirmBtn.className = `px-5 py-2.5 text-white rounded-lg font-medium transition shadow-sm ${config.confirmColor}`;
+      
+      // Show dialog overlay
+      const overlay = document.getElementById('dialog-overlay');
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      
+      // Trigger pop-in animation
+      // Small delay to allow display:block to apply before animating opacity/transform
+      setTimeout(() => {
+        const content = document.getElementById('dialog-content');
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+
+    function closeDialog() {
+      const content = document.getElementById('dialog-content');
+      content.classList.remove('scale-100', 'opacity-100');
+      content.classList.add('scale-95', 'opacity-0');
+      
+      setTimeout(() => {
+        const overlay = document.getElementById('dialog-overlay');
+        overlay.classList.remove('flex');
+        overlay.classList.add('hidden');
+      }, 300);
+    }
+  </script>
+</body>
+</html>
