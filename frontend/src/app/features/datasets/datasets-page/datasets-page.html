@@ -32,7 +32,7 @@
             <th class="px-6 py-3.5 font-semibold">資料集名稱</th>
             <th class="px-6 py-3.5 font-semibold">狀態</th>
             <th class="px-6 py-3.5 font-semibold">建立時間</th>
-            <th class="px-6 py-3.5 font-semibold text-right">操作</th>
+            <th class="px-6 py-3.5 font-semibold text-center">操作</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-matBorder">
@@ -58,8 +58,8 @@
                 }
               </td>
               <td class="px-6 py-4 text-gray-500 text-xs">{{dataset.created_at | date:'yyyy-MM-dd HH:mm':'+0800'}}</td>
-              <td class="px-6 py-4 text-right space-x-2">
-                <button (click)="goToDashboard(dataset.id)" [disabled]="dataset.status.toUpperCase() !== 'READY'" [class.opacity-50]="dataset.status.toUpperCase() !== 'READY'" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-2 py-1 rounded hover:bg-indigo-50 transition">
+              <td class="px-6 py-4 text-center space-x-2">
+                <button (click)="goToDashboard(dataset.id)" [disabled]="dataset.status.toUpperCase() !== 'READY'" [class.opacity-50]="dataset.status.toUpperCase() !== 'READY'" class="text-indigo-600 hover:text-indigo-800 font-medium text-xs px-3 py-1.5 rounded bg-indigo-50 hover:bg-indigo-100 transition">
                   執行分析
                 </button>
               </td>
@@ -106,7 +106,8 @@
     <app-dataset-preview 
       [datasetItem]="selectedDataset"
       (back)="closePreview()"
-      (deleteAction)="deleteDatasetAndClose($event)">
+      (deleteAction)="deleteDatasetAndClose($event)"
+      (analyzeAction)="goToDashboard($event)">
     </app-dataset-preview>
   }
 

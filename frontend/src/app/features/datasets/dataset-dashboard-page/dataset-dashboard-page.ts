@@ -27,6 +27,9 @@ export class DatasetDashboardPage implements OnInit {
   isCreatingNewTask = false;
   newTaskType = 'group_by';
 
+  /**
+   * 元件初始化時，訂閱路由參數取得資料集 ID，並載入儀表板資訊
+   */
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
@@ -37,6 +40,9 @@ export class DatasetDashboardPage implements OnInit {
     });
   }
 
+  /**
+   * 載入資料集的詳細資訊與分析任務列表
+   */
   loadDashboard() {
     this.isLoading = true;
     this.error = null;
@@ -52,6 +58,9 @@ export class DatasetDashboardPage implements OnInit {
     });
   }
 
+  /**
+   * 呼叫 API 載入此資料集關聯的所有分析任務，並依建立時間降冪排序
+   */
   loadTasks() {
     this.api.getAnalysisTasks(1, 100, this.datasetId).subscribe({
       next: (res) => {
@@ -68,6 +77,9 @@ export class DatasetDashboardPage implements OnInit {
     });
   }
 
+  /**
+   * 建立新的分析任務，成功後將其加到列表最前面
+   */
   createNewTask() {
     this.isCreatingNewTask = true;
     this.api.runAnalysis({ dataset_id: this.datasetId, task_type: this.newTaskType }).subscribe({
@@ -82,6 +94,9 @@ export class DatasetDashboardPage implements OnInit {
     });
   }
 
+  /**
+   * 當子元件(分析區塊)觸發刪除成功時，從目前的列表中移除該任務
+   */
   onTaskDeleted(taskId: number) {
     this.tasks = this.tasks.filter(t => t.id !== taskId);
   }

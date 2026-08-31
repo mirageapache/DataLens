@@ -58,6 +58,11 @@ def get_dataset_preview(
 def download_dataset(dataset_id: int, db: Session = Depends(get_db)):
     service = DatasetService(db)
     dataset = service.get_dataset(dataset_id)
-    if not dataset or not os.path.exists(dataset.file_path):
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    
+    file_path = service._resolve_safe_path(dataset.file_path)
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="Dataset file not found")
-    return FileResponse(dataset.file_path, filename=dataset.filename)
+        
+    return FileResponse(path=file_path, filename=dataset.filename)

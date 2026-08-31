@@ -38,10 +38,16 @@ export class DatasetsPage implements OnInit {
   toastType: 'success' | 'error' | 'info' = 'success';
   private toastTimer: any = null;
 
+  /**
+   * 元件初始化時，載入資料集列表
+   */
   ngOnInit() {
     this.loadDatasets();
   }
 
+  /**
+   * 呼叫 API 載入資料集列表，並處理網址列的 preview 參數以自動開啟預覽
+   */
   loadDatasets() {
     this.isLoading = true;
     this.api.getDatasets(this.page, this.pageSize).subscribe({
@@ -66,6 +72,9 @@ export class DatasetsPage implements OnInit {
     });
   }
 
+  /**
+   * 開啟上傳資料集的彈出視窗並重置狀態
+   */
   openUploadDialog() {
     this.isUploadModalOpen = true;
     this.selectedFile = null;
@@ -73,22 +82,34 @@ export class DatasetsPage implements OnInit {
     this.uploadProgress = 0;
   }
 
+  /**
+   * 關閉上傳資料集的彈出視窗並清除已選檔案
+   */
   closeUploadDialog() {
     this.isUploadModalOpen = false;
     this.selectedFile = null;
     this.uploadError = null;
   }
 
+  /**
+   * 處理檔案拖曳進入上傳區塊的事件
+   */
   onDragOver(event: DragEvent) {
     event.preventDefault();
     this.isDragging = true;
   }
 
+  /**
+   * 處理檔案拖曳離開上傳區塊的事件
+   */
   onDragLeave(event: DragEvent) {
     event.preventDefault();
     this.isDragging = false;
   }
 
+  /**
+   * 處理檔案在拖曳區塊放開的事件
+   */
   onDrop(event: DragEvent) {
     event.preventDefault();
     this.isDragging = false;
@@ -97,6 +118,9 @@ export class DatasetsPage implements OnInit {
     }
   }
 
+  /**
+   * 處理使用者透過按鈕選擇檔案的事件
+   */
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -104,6 +128,9 @@ export class DatasetsPage implements OnInit {
     }
   }
 
+  /**
+   * 驗證選擇的檔案格式與大小是否符合規定
+   */
   handleFile(file: File) {
     this.uploadError = null;
     const ext = file.name.split('.').pop()?.toLowerCase();
@@ -118,11 +145,17 @@ export class DatasetsPage implements OnInit {
     this.selectedFile = file;
   }
 
+  /**
+   * 移除當前已選擇的檔案
+   */
   removeSelectedFile() {
     this.selectedFile = null;
     this.uploadError = null;
   }
 
+  /**
+   * 提交檔案上傳請求，並監聽上傳進度與結果
+   */
   submitUpload() {
     if (!this.selectedFile) return;
     this.isUploading = true;
@@ -147,10 +180,16 @@ export class DatasetsPage implements OnInit {
     });
   }
 
+  /**
+   * 導覽至該資料集的儀表板頁面 (Dashboard)
+   */
   goToDashboard(datasetId: number) {
     this.router.navigate(['/datasets', datasetId, 'dashboard']);
   }
 
+  /**
+   * 刪除指定的資料集並重新載入列表
+   */
   deleteDataset(datasetId: number) {
     if (confirm('確定要刪除這筆資料集嗎？此操作將無法復原。')) {
       this.api.deleteDataset(datasetId).subscribe({
@@ -165,6 +204,9 @@ export class DatasetsPage implements OnInit {
     }
   }
 
+  /**
+   * 刪除目前正在預覽的資料集，並關閉預覽畫面
+   */
   deleteDatasetAndClose(datasetId: number) {
     if (confirm('確定要刪除這筆資料集嗎？此操作將無法復原。')) {
       this.api.deleteDataset(datasetId).subscribe({
@@ -180,6 +222,9 @@ export class DatasetsPage implements OnInit {
     }
   }
 
+  /**
+   * 顯示短暫的提示訊息 (Toast)
+   */
   showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
     this.toastMessage = message;
     this.toastType = type;
@@ -191,6 +236,9 @@ export class DatasetsPage implements OnInit {
     }, 4000);
   }
 
+  /**
+   * 開啟資料集預覽畫面（側邊面板）
+   */
   viewDataset(dataset: Dataset) {
     if (dataset.status.toUpperCase() !== 'READY') {
       this.showToast('資料集尚未處理完成，無法預覽', 'info');
@@ -201,6 +249,9 @@ export class DatasetsPage implements OnInit {
     this.selectedDataset = dataset;
   }
 
+  /**
+   * 關閉資料集預覽畫面
+   */
   closePreview() {
     this.selectedDatasetId = null;
     this.selectedDatasetName = '';
